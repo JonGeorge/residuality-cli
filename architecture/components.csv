@@ -1,0 +1,7 @@
+id,name
+cli,CLI Parser (clap command tree)
+model,Domain Model (Component & Stressor types)
+storage,Storage Layer (CSV read/write)
+deserializer,Custom Field Deserializer (affects parsing)
+matrix,Incidence Matrix Generator
+report,Matrix/Sums Reporter (stdout + reports/matrix.csv)
