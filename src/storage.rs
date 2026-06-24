@@ -1,7 +1,7 @@
 // storage.rs — file reading/writing, separated from main's command dispatch.
 
-use std::fs::File;
 use crate::model::{Component, Stressor};
+use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 
 pub const COMPONENTS_PATH: &str = "architecture/components.csv";
@@ -32,13 +32,15 @@ pub fn add_component(id: String, name: String) -> Result<(), Box<dyn std::error:
     match file {
         Ok(mut file) => {
             // check last char on existing csv for line break
-            if file.metadata()?.len() > 0 { // file has data
+            if file.metadata()?.len() > 0 {
+                // file has data
                 ensure_last_char_is_new_line(&mut file)?;
                 append_row(&file, &new_component, false)?;
-            } else if file.metadata()?.len() == 0 { // file has no data
+            } else if file.metadata()?.len() == 0 {
+                // file has no data
                 append_row(&file, &new_component, true)?;
             }
-        },
+        }
         Err(e) => match e.kind() {
             // File does not exist, create a new one
             std::io::ErrorKind::NotFound => {

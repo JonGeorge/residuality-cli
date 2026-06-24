@@ -1,9 +1,9 @@
 use clap::Parser;
 
-mod commands;
 mod cli;
-mod storage;
+mod commands;
 mod model;
+mod storage;
 
 use cli::Commands;
 
@@ -26,5 +26,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 }
-
-

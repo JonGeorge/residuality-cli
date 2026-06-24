@@ -1,2 +1,2 @@
-pub mod matrix;
 pub mod component;
+pub mod matrix;
