@@ -1,2 +1,3 @@
 /target
-/src/bin
+/src/bin/*
+!/src/bin/res.rs

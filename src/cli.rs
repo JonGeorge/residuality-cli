@@ -1,7 +1,6 @@
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "residuality")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
