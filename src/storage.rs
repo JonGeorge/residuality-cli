@@ -47,7 +47,7 @@ pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
                 create_new_csv(path, thing)?;
             }
             _ => {
-                return Err(e.into());
+                return Err(e);
             }
         },
     }
