@@ -3,5 +3,17 @@ cli,CLI Parser (clap command tree)
 model,Domain Model (Component & Stressor types)
 storage,Storage Layer (CSV read/write)
 deserializer,Custom Field Deserializer (affects parsing)
+serializer,Field Serializer (affects join on write)
 matrix,Incidence Matrix Generator
 report,Matrix/Sums Reporter (stdout + reports/matrix.csv)
+init_cmd,Init Command (scaffolds architecture/ files)
+component_cmd,Component Add Command
+stressor_cmd,Stressor Add Command
+triggers,Contagion Triggers Analyzer (seven triggers)
+residual_index,Residual Index Calculator (empirical test)
+test_cmd,Test Command (test <file>)
+validation,Referential Integrity & Schema Validation
+error,Error Handling & Result Propagation
+fs_paths,Filesystem Path Resolution (architecture/ & reports/)
+config,Configuration & Working Directory Resolution
+stdout,Stdout Output Formatting
