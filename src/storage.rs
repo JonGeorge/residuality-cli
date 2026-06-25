@@ -1,5 +1,7 @@
 // storage.rs — file reading/writing, separated from main's command dispatch.
 
+use serde::Serialize;
+
 use crate::model::{Component, Stressor};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
@@ -21,13 +23,11 @@ pub fn load_stressors_csv() -> Result<Vec<Stressor>, Box<dyn std::error::Error>>
     Ok(stressors)
 }
 
-pub fn add_component(id: String, name: String) -> Result<(), Box<dyn std::error::Error>> {
-    let new_component = Component { id, name };
-
+pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     let file = std::fs::OpenOptions::new()
         .read(true)
         .append(true)
-        .open(COMPONENTS_PATH);
+        .open(path);
 
     match file {
         Ok(mut file) => {
@@ -35,16 +35,16 @@ pub fn add_component(id: String, name: String) -> Result<(), Box<dyn std::error:
             if file.metadata()?.len() > 0 {
                 // file has data
                 ensure_last_char_is_new_line(&mut file)?;
-                append_row(&file, &new_component, false)?;
+                write_row(&file, thing, false)?;
             } else if file.metadata()?.len() == 0 {
                 // file has no data
-                append_row(&file, &new_component, true)?;
+                write_row(&file, thing, true)?;
             }
         }
         Err(e) => match e.kind() {
             // File does not exist, create a new one
             std::io::ErrorKind::NotFound => {
-                create_component_csv(&new_component)?;
+                create_new_csv(path, thing)?;
             }
             _ => {
                 return Err(e.into());
@@ -55,12 +55,12 @@ pub fn add_component(id: String, name: String) -> Result<(), Box<dyn std::error:
     Ok(())
 }
 
-fn append_row(file: &File, component: &Component, has_headers: bool) -> std::io::Result<()> {
+fn write_row<T: Serialize>(file: &File, row: &T, has_headers: bool) -> std::io::Result<()> {
     let mut writer = csv::WriterBuilder::new()
         .has_headers(has_headers)
         .from_writer(file);
 
-    writer.serialize(component)?;
+    writer.serialize(row)?;
     writer.flush()
 }
 
@@ -76,11 +76,11 @@ fn ensure_last_char_is_new_line(file: &mut File) -> std::io::Result<()> {
     Ok(())
 }
 
-fn create_component_csv(component: &Component) -> std::io::Result<()> {
+fn create_new_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     let mut writer = csv::WriterBuilder::new()
         .has_headers(true)
-        .from_path(COMPONENTS_PATH)?;
+        .from_path(path)?;
 
-    writer.serialize(component)?;
+    writer.serialize(thing)?;
     writer.flush()
 }

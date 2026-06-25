@@ -16,9 +16,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
 
-        Commands::Component { action } => commands::component::run(action),
+        Commands::Component { action } => {
+            commands::component::run(action)?;
+            Ok(())
+        }
 
-        Commands::Matrix => commands::matrix::run(),
+        Commands::Stressor { action } => {
+            commands::stressor::run(action)?;
+            Ok(())
+        }
+
+        Commands::Matrix => {
+            commands::matrix::run()?;
+            Ok(())
+        }
 
         _ => {
             eprintln!("not implemented yet");

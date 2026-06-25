@@ -32,6 +32,27 @@ pub enum ComponentAction {
 
 #[derive(Subcommand)]
 pub enum StressorAction {
-    // Placeholder for now; we'll grow this when the Stressor struct comes back.
-    Add { id: String, name: String },
+    Add {
+
+        #[arg(long)]
+        id: String,
+
+        #[arg(long)]
+        name: Option<String>,
+
+        #[arg(long)]
+        detection: Option<String>,
+
+        #[arg(long)]
+        attractor: Option<String>,
+
+        #[arg(long)]
+        business_reaction: Option<String>,
+
+        #[arg(long)]
+        technical_change: Option<String>,
+
+        #[arg(long = "affects", value_delimiter = ';')]
+        affected_components: Vec<String>,
+    },
 }

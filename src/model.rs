@@ -5,7 +5,7 @@
 // Stressor (writing every field) and reads fields like `affected_components`.
 // Without `pub` on the fields, main.rs could name the type but not touch its insides.
 
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 // A Component is one part of the architecture we're stressing.
 #[derive(Serialize, Deserialize)]
@@ -18,14 +18,23 @@ pub struct Component {
 #[derive(Serialize, Deserialize)]
 pub struct Stressor {
     pub id: String,
-    pub name: String,
-    pub detection: String,
-    pub attractor: String,
-    pub business_reaction: String,
-    pub technical_change: String,
+
+    pub name: Option<String>,
+
+    pub detection: Option<String>,
+
+    pub attractor: Option<String>,
+
+    pub business_reaction: Option<String>,
+
+    pub technical_change: Option<String>,
+
     // This ONE field is parsed by our function instead of serde's default Vec logic.
     // The CSV cell holds ids joined by ';'  (e.g. "auth_service;database").
-    #[serde(deserialize_with = "deserialize_affects")]
+    #[serde(
+        serialize_with = "serialize_affects",
+        deserialize_with = "deserialize_affects"
+    )]
     pub affected_components: Vec<String>,
 }
 
@@ -52,4 +61,15 @@ where
         .collect();
 
     Ok(affected_components)
+}
+
+// A custom field serializer: collapse the Vec into ONE cell joined by ';'.
+// This is the inverse of deserialize_affects.
+fn serialize_affects<S>(affects: &[String], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let str = affects.join(";");
+    serializer.serialize_str(&str)
+
 }
