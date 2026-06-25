@@ -33,7 +33,6 @@ pub enum ComponentAction {
 #[derive(Subcommand)]
 pub enum StressorAction {
     Add {
-
         #[arg(long)]
         id: String,
 

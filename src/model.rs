@@ -71,5 +71,4 @@ where
 {
     let str = affects.join(";");
     serializer.serialize_str(&str)
-
 }
