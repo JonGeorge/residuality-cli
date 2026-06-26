@@ -1,7 +1,5 @@
 use crate::{
-    cli::StressorAction,
-    model::Stressor,
-    storage::{STRESSORS_PATH, append_csv},
+    cli::StressorAction, model::Stressor, storage::{STRESSORS_PATH, append_csv, get_rows},
 };
 
 pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
@@ -26,6 +24,16 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
             };
 
             Ok(append_csv(STRESSORS_PATH, &new_stressor)?)
+        }
+
+        StressorAction::List => {
+            let stressors: Vec<Stressor> = get_rows(STRESSORS_PATH)?;
+            for stressor in stressors {
+                if let Some(n) = stressor.name {
+                    println!("{}", n);
+                }
+            }
+            Ok(())
         }
     }
 }

@@ -1,27 +1,13 @@
 // storage.rs — file reading/writing, separated from main's command dispatch.
 
-use serde::Serialize;
+use serde::de::DeserializeOwned;
+use serde::{Serialize};
 
-use crate::model::{Component, Stressor};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 
 pub const COMPONENTS_PATH: &str = "architecture/components.csv";
 pub const STRESSORS_PATH: &str = "architecture/stressors.csv";
-
-pub fn load_components_csv() -> Result<Vec<Component>, Box<dyn std::error::Error>> {
-    let mut reader = csv::Reader::from_path(COMPONENTS_PATH)?;
-    let components = reader
-        .deserialize()
-        .collect::<Result<Vec<Component>, _>>()?;
-    Ok(components)
-}
-
-pub fn load_stressors_csv() -> Result<Vec<Stressor>, Box<dyn std::error::Error>> {
-    let mut reader = csv::Reader::from_path(STRESSORS_PATH)?;
-    let stressors = reader.deserialize().collect::<Result<Vec<Stressor>, _>>()?;
-    Ok(stressors)
-}
 
 pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     let file = std::fs::OpenOptions::new()
@@ -62,6 +48,15 @@ fn write_row<T: Serialize>(file: &File, row: &T, has_headers: bool) -> std::io::
 
     writer.serialize(row)?;
     writer.flush()
+}
+
+pub fn get_rows<T: DeserializeOwned>(path: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>{
+    let mut reader = csv::Reader::from_path(path)?;
+    let things = reader
+        .deserialize()
+        .collect::<Result<Vec<T>, _>>()?;
+
+    Ok(things)
 }
 
 fn ensure_last_char_is_new_line(file: &mut File) -> std::io::Result<()> {

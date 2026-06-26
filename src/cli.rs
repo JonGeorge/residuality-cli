@@ -27,6 +27,7 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum ComponentAction {
     Add { id: String, name: String },
+    List,
 }
 
 #[derive(Subcommand)]
@@ -53,4 +54,6 @@ pub enum StressorAction {
         #[arg(long = "affects", value_delimiter = ';')]
         affected_components: Vec<String>,
     },
+
+    List,
 }

@@ -1,9 +1,9 @@
 use crate::model::{Component, Stressor};
-use crate::storage::{load_components_csv, load_stressors_csv};
+use crate::storage::{get_rows, COMPONENTS_PATH, STRESSORS_PATH};
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let components = load_components_csv()?;
-    let stressors = load_stressors_csv()?;
+    let components = get_rows(COMPONENTS_PATH)?;
+    let stressors = get_rows(STRESSORS_PATH)?;
     let matrix = generate_matrix(&stressors, &components);
     print_matrix(&matrix, &stressors, &components);
     Ok(())
