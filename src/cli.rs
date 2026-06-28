@@ -28,6 +28,8 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum ComponentAction {
     Add { id: String, name: String },
+
+    #[command(alias = "ls")]
     List,
 }
 
@@ -56,5 +58,6 @@ pub enum StressorAction {
         affected_components: Vec<String>,
     },
 
+    #[command(alias = "ls")]
     List,
 }
