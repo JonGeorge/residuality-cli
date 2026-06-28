@@ -27,7 +27,7 @@ pub enum Commands {
 
 #[derive(Subcommand)]
 pub enum ComponentAction {
-    Add { id: String, name: String },
+    Add { id: String, name: Option<String> },
 
     #[command(alias = "ls")]
     List,

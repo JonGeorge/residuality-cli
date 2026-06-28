@@ -11,7 +11,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 #[derive(Serialize, Deserialize)]
 pub struct Component {
     pub id: String,
-    pub name: String,
+    pub name: Option<String>,
 }
 
 // A Stressor is an environmental pressure on the architecture.

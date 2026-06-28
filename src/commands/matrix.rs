@@ -84,18 +84,18 @@ mod tests {
     fn component(id: &str) -> Component {
         Component {
             id: id.to_string(),
-            name: String::new(),
+            name: Some(String::new()),
         }
     }
 
     fn stressor(id: &str, affects: &[&str]) -> Stressor {
         Stressor {
             id: id.to_string(),
-            name: String::new(),
-            detection: String::new(),
-            attractor: String::new(),
-            business_reaction: String::new(),
-            technical_change: String::new(),
+            name: Some(String::new()),
+            detection: Some(String::new()),
+            attractor: Some(String::new()),
+            business_reaction: Some(String::new()),
+            technical_change: Some(String::new()),
             affected_components: affects.iter().map(|s| s.to_string()).collect(),
         }
     }
