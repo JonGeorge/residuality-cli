@@ -1,53 +1,60 @@
-use crate::model::{Component, Stressor};
+use crate::model::{Component, Matrix, Stressor};
 use crate::storage::{get_rows, COMPONENTS_PATH, STRESSORS_PATH};
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let components = get_rows(COMPONENTS_PATH)?;
     let stressors = get_rows(STRESSORS_PATH)?;
-    let matrix = generate_matrix(&stressors, &components);
-    print_matrix(&matrix, &stressors, &components);
+    let matrix = generate_matrix(stressors, components);
+    print_matrix(&matrix);
     Ok(())
 }
 
-fn generate_matrix(stressors: &[Stressor], components: &[Component]) -> Vec<Vec<u32>> {
-    stressors
-        .iter()
-        .map(|s| {
-            components
-                .iter()
-                .map(|c| {
-                    if s.affected_components.contains(&c.id) {
-                        1
-                    } else {
-                        0
-                    }
-                })
-                .collect()
-        })
-        .collect()
+fn generate_matrix(stressors: Vec<Stressor>, components: Vec<Component>) -> Matrix {
+    Matrix {
+        table: stressors
+            .iter()
+            .map(|s| {
+                components
+                    .iter()
+                    .map(|c| {
+                        if s.affected_components.contains(&c.id) {
+                            1
+                        } else {
+                            0
+                        }
+                    })
+                    .collect()
+            })
+            .collect(),
+
+        stressors: stressors,
+
+        components: components
+
+    }
 }
 
-fn print_matrix(matrix: &[Vec<u32>], stressors: &[Stressor], components: &[Component]) {
+fn print_matrix(matrix: &Matrix) {
     // The left column must be wide enough for the longest stressor id (or the header).
-    let label_w = label_width(stressors);
+    let label_w = label_width(&matrix.stressors);
 
     // Rule width = label column + each component column ("  " gap + id width)
     //            + the trailing sum column ("  " gap + 3).
-    let body_w: usize = components.iter().map(|c| 2 + c.id.len()).sum();
+    let body_w: usize = matrix.components.iter().map(|c| 2 + c.id.len()).sum();
     let rule = "─".repeat(label_w + body_w + 2 + 3);
 
     // --- header: component ids across the top, Σ for the per-row sum ---
     print!("{:<1$}", "stressor", label_w);
-    for c in components {
+    for c in &matrix.components {
         print!("  {}", c.id);
     }
     println!("  {:>3}", "Σ");
     println!("{rule}");
 
     // --- one row per stressor: ● = affected, · = not; row sum on the right ---
-    for (row, s) in matrix.iter().zip(stressors) {
-        for (cell, c) in row.iter().zip(components) {
+    for (row, s) in matrix.table.iter().zip(&matrix.stressors) {
         print!("{:<1$}", s.name.as_deref().unwrap_or(&s.id), label_w);
+        for (cell, c) in row.iter().zip(&matrix.components) {
             let glyph = if *cell == 1 { "●" } else { "·" };
             print!("  {:^1$}", glyph, c.id.len());
         }
@@ -58,8 +65,8 @@ fn print_matrix(matrix: &[Vec<u32>], stressors: &[Stressor], components: &[Compo
 
     // --- footer: column sums (contagion pressure per component) ---
     print!("{:<1$}", "Σ", label_w);
-    for (i, c) in components.iter().enumerate() {
-        let col_sum: u32 = matrix.iter().map(|r| r[i]).sum();
+    for (i, c) in matrix.components.iter().enumerate() {
+        let col_sum: u32 = matrix.table.iter().map(|r| r[i]).sum();
         print!("  {:^1$}", col_sum, c.id.len());
     }
     println!();
@@ -107,10 +114,10 @@ mod tests {
         let stressors = vec![stressor("s1", &["a", "c"])];
 
         // Act
-        let matrix = generate_matrix(&stressors, &components);
+        let matrix = generate_matrix(stressors, components);
 
         // Assert: one row (one stressor); 1 for a and c, 0 for b.
-        assert_eq!(matrix, vec![vec![1, 0, 1]]);
+        assert_eq!(matrix.table, vec![vec![1, 0, 1]]);
     }
 
     #[test]
@@ -118,8 +125,8 @@ mod tests {
         let components = vec![component("a"), component("b")];
         let stressors = vec![stressor("s1", &[])]; // affects no components
 
-        let matrix = generate_matrix(&stressors, &components);
+        let matrix = generate_matrix(stressors, components);
 
-        assert_eq!(matrix, vec![vec![0, 0]]);
+        assert_eq!(matrix.table, vec![vec![0, 0]]);
     }
 }

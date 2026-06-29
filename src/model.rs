@@ -72,3 +72,9 @@ where
     let str = affects.join(";");
     serializer.serialize_str(&str)
 }
+
+pub struct Matrix {
+    pub table: Vec<Vec<u32>>,
+    pub stressors: Vec<Stressor>,
+    pub components: Vec<Component>
+}
