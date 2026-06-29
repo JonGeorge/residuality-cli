@@ -46,8 +46,8 @@ fn print_matrix(matrix: &[Vec<u32>], stressors: &[Stressor], components: &[Compo
 
     // --- one row per stressor: ● = affected, · = not; row sum on the right ---
     for (row, s) in matrix.iter().zip(stressors) {
-        print!("{:<1$}", s.id, label_w);
         for (cell, c) in row.iter().zip(components) {
+        print!("{:<1$}", s.name.as_deref().unwrap_or(&s.id), label_w);
             let glyph = if *cell == 1 { "●" } else { "·" };
             print!("  {:^1$}", glyph, c.id.len());
         }
