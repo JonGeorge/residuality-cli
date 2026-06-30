@@ -1,6 +1,6 @@
 use crate::cli::MatrixAction;
 use crate::model::{Component, Matrix, Stressor};
-use crate::storage::{COMPONENTS_PATH, get_matrix_path_with_date, STRESSORS_PATH, get_rows};
+use crate::storage::{COMPONENTS_PATH, STRESSORS_PATH, get_matrix_path_with_date, get_rows};
 
 use std::ops::Add;
 
@@ -22,7 +22,6 @@ pub fn run(action: MatrixAction) -> Result<(), Box<dyn std::error::Error>> {
             print_matrix(&matrix);
         }
     }
-
 
     Ok(())
 }
