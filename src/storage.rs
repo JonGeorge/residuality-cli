@@ -1,13 +1,14 @@
 // storage.rs — file reading/writing, separated from main's command dispatch.
 
+use serde::Serialize;
 use serde::de::DeserializeOwned;
-use serde::{Serialize};
 
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 
 pub const COMPONENTS_PATH: &str = "architecture/components.csv";
 pub const STRESSORS_PATH: &str = "architecture/stressors.csv";
+pub const MATRIX_PATH: &str = "architecture/matrix.csv";
 
 pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     let file = std::fs::OpenOptions::new()
@@ -50,11 +51,9 @@ fn write_row<T: Serialize>(file: &File, row: &T, has_headers: bool) -> std::io::
     writer.flush()
 }
 
-pub fn get_rows<T: DeserializeOwned>(path: &str) -> Result<Vec<T>, Box<dyn std::error::Error>>{
+pub fn get_rows<T: DeserializeOwned>(path: &str) -> Result<Vec<T>, Box<dyn std::error::Error>> {
     let mut reader = csv::Reader::from_path(path)?;
-    let things = reader
-        .deserialize()
-        .collect::<Result<Vec<T>, _>>()?;
+    let things = reader.deserialize().collect::<Result<Vec<T>, _>>()?;
 
     Ok(things)
 }

@@ -26,8 +26,8 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
 
-        Commands::Matrix => {
-            commands::matrix::run()?;
+        Commands::Matrix { action } => {
+            commands::matrix::run(action)?;
             Ok(())
         }
 

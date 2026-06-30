@@ -1,11 +1,58 @@
+use crate::cli::MatrixAction;
 use crate::model::{Component, Matrix, Stressor};
-use crate::storage::{get_rows, COMPONENTS_PATH, STRESSORS_PATH};
+use crate::storage::{COMPONENTS_PATH, MATRIX_PATH, STRESSORS_PATH, get_rows};
 
-pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let components = get_rows(COMPONENTS_PATH)?;
-    let stressors = get_rows(STRESSORS_PATH)?;
-    let matrix = generate_matrix(stressors, components);
-    print_matrix(&matrix);
+use std::ops::Add;
+
+pub fn run(action: MatrixAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        MatrixAction::Export => {
+            let components = get_rows(COMPONENTS_PATH)?;
+            let stressors = get_rows(STRESSORS_PATH)?;
+            let matrix = generate_matrix(stressors, components);
+            export_matrix_to_csv(MATRIX_PATH, &matrix)?;
+            println!("Export saved to ./{}", MATRIX_PATH);
+        }
+
+        MatrixAction::Print => {
+            let components = get_rows(COMPONENTS_PATH)?;
+            let stressors = get_rows(STRESSORS_PATH)?;
+            let matrix = generate_matrix(stressors, components);
+            print_matrix(&matrix);
+        }
+    }
+
+
+    Ok(())
+}
+
+fn export_matrix_to_csv(path: &str, matrix: &Matrix) -> Result<(), Box<dyn std::error::Error>> {
+    let mut csv_string = std::string::String::new();
+
+    csv_string = csv_string.add(","); // First cell (A1) is empty
+    csv_string = csv_string.add(
+        matrix
+            .components
+            .iter()
+            .map(|c| c.id.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+            .as_str(),
+    );
+    csv_string = csv_string.add("\n");
+
+    for (i, row) in matrix.table.iter().enumerate() {
+        csv_string = csv_string.add(&matrix.stressors[i].id).add(",");
+        csv_string = csv_string.add(
+            &row.iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>()
+                .join(","),
+        );
+        csv_string = csv_string.add("\n");
+    }
+
+    std::fs::write(path, csv_string)?;
     Ok(())
 }
 
@@ -29,8 +76,7 @@ fn generate_matrix(stressors: Vec<Stressor>, components: Vec<Component>) -> Matr
 
         stressors: stressors,
 
-        components: components
-
+        components: components,
     }
 }
 

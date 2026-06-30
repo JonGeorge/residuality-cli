@@ -18,7 +18,10 @@ pub enum Commands {
         #[command(subcommand)]
         action: StressorAction,
     },
-    Matrix,
+    Matrix {
+        #[command(subcommand)]
+        action: MatrixAction,
+    },
     Triggers,
     Test {
         file: String,
@@ -27,7 +30,10 @@ pub enum Commands {
 
 #[derive(Subcommand)]
 pub enum ComponentAction {
-    Add { id: String, name: Option<String> },
+    Add {
+        id: String,
+        name: Option<String>,
+    },
 
     #[command(alias = "ls")]
     List,
@@ -60,4 +66,10 @@ pub enum StressorAction {
 
     #[command(alias = "ls")]
     List,
+}
+
+#[derive(Subcommand)]
+pub enum MatrixAction {
+    Export,
+    Print,
 }
