@@ -1,5 +1,7 @@
 use crate::{
-    cli::StressorAction, model::Stressor, storage::{STRESSORS_PATH, append_csv, get_rows},
+    cli::StressorAction,
+    model::Stressor,
+    storage::{STRESSORS_PATH, append_csv, get_rows},
 };
 
 pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {

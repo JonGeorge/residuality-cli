@@ -76,5 +76,5 @@ where
 pub struct Matrix {
     pub table: Vec<Vec<u32>>,
     pub stressors: Vec<Stressor>,
-    pub components: Vec<Component>
+    pub components: Vec<Component>,
 }
