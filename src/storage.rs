@@ -8,9 +8,19 @@ use std::io::{Read, Seek, SeekFrom, Write};
 
 pub const COMPONENTS_PATH: &str = "architecture/components.csv";
 pub const STRESSORS_PATH: &str = "architecture/stressors.csv";
-pub const MATRIX_PATH: &str = "architecture/matrix.csv";
+
+pub fn get_matrix_path_with_date() -> String {
+    let date = chrono::Local::now().format("%Y%m%d");
+
+    String::from(format!("reports/{}_matrix.csv", date.to_string()))
+}
 
 pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
+    // Check if directory exists. Without this, file write will fail
+    if let Some(path) = std::path::Path::new(path).parent() {
+        std::fs::create_dir_all(path)?;
+    }
+
     let file = std::fs::OpenOptions::new()
         .read(true)
         .append(true)

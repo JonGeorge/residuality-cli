@@ -5,6 +5,7 @@ edition = "2024"
 default-run = "residuality"
 
 [dependencies]
+chrono = "0.4.45"
 clap = { version = "4.6.1", features = ["derive"] }
 csv = "1.4.0"
 serde = { version = "1", features = ["derive"] }

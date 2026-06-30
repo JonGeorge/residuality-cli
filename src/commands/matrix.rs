@@ -1,6 +1,6 @@
 use crate::cli::MatrixAction;
 use crate::model::{Component, Matrix, Stressor};
-use crate::storage::{COMPONENTS_PATH, MATRIX_PATH, STRESSORS_PATH, get_rows};
+use crate::storage::{COMPONENTS_PATH, get_matrix_path_with_date, STRESSORS_PATH, get_rows};
 
 use std::ops::Add;
 
@@ -10,8 +10,9 @@ pub fn run(action: MatrixAction) -> Result<(), Box<dyn std::error::Error>> {
             let components = get_rows(COMPONENTS_PATH)?;
             let stressors = get_rows(STRESSORS_PATH)?;
             let matrix = generate_matrix(stressors, components);
-            export_matrix_to_csv(MATRIX_PATH, &matrix)?;
-            println!("Export saved to ./{}", MATRIX_PATH);
+            let matrix_path = get_matrix_path_with_date();
+            export_matrix_to_csv(&matrix_path, &matrix)?;
+            println!("Export saved to ./{}", matrix_path);
         }
 
         MatrixAction::Print => {
@@ -50,6 +51,11 @@ fn export_matrix_to_csv(path: &str, matrix: &Matrix) -> Result<(), Box<dyn std::
                 .join(","),
         );
         csv_string = csv_string.add("\n");
+    }
+
+    // Check if directory exists. Without this, file write will fail
+    if let Some(path) = std::path::Path::new(path).parent() {
+        std::fs::create_dir_all(path)?;
     }
 
     std::fs::write(path, csv_string)?;
