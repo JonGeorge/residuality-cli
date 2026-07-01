@@ -1,9 +1,11 @@
 use clap::Parser;
 
+mod analysis;
 mod cli;
 mod commands;
 mod model;
 mod storage;
+mod views;
 
 use cli::Commands;
 
