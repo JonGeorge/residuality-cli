@@ -4,7 +4,7 @@ pub fn get_matrix_as_vectors(matrix: &Matrix) -> Result<Vec<Vec<String>>, Box<dy
     let mut vectors = std::vec::Vec::new();
 
     // For each component add to a vector ["", component1.id, component2.id, ... ]
-    let mut header_row: Vec<String> = matrix.components.iter().map(|c| c.id.to_string()).collect::<Vec<String>>();
+    let mut header_row: Vec<String> = matrix.components.iter().map(|c| c.name.as_deref().unwrap_or(&c.id).to_string()).collect::<Vec<String>>();
     header_row.insert(0, "".to_string());
     vectors.push(header_row);
 
