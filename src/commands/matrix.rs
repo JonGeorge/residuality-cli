@@ -1,6 +1,8 @@
-use crate::analysis::matrix::{ get_matrix_as_vectors, generate_incidence_matrix};
+use crate::analysis::matrix::{generate_incidence_matrix, get_matrix_as_vectors};
 use crate::cli::MatrixAction;
-use crate::storage::{COMPONENTS_PATH, STRESSORS_PATH, write_matrix_to_csv, get_matrix_path_with_date, get_rows};
+use crate::storage::{
+    COMPONENTS_PATH, STRESSORS_PATH, get_matrix_path_with_date, get_rows, write_matrix_to_csv,
+};
 use crate::views::matrix::print_matrix;
 
 pub fn run(action: MatrixAction) -> Result<(), Box<dyn std::error::Error>> {
