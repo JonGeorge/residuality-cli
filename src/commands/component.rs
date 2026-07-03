@@ -11,8 +11,7 @@ pub fn run(action: ComponentAction) -> Result<(), Box<dyn std::error::Error>> {
             let new_component = Component { id, name };
             let components: Vec<Component> = if Path::new(COMPONENTS_PATH).exists() {
                 get_rows(COMPONENTS_PATH)?
-            }
-            else {
+            } else {
                 Vec::new()
             };
 
