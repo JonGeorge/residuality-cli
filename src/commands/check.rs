@@ -40,34 +40,48 @@ fn check_components(components: &[Component]) -> Result<Vec<String>, Box<dyn std
     let mut findings: Vec<String> = Vec::new();
 
     for (i, c) in components.iter().enumerate() {
-        // Check if id is empty
-        if c.id.trim().is_empty() {
-            findings.push(format!("{} row {}- needs id", COMPONENTS_PATH, i + 2));
-        }
-        // Check if id contains only letters, numbers, and underscores
-        else if !id_chars_are_valid(&c.id) {
-            findings.push(format!(
-                "{} row {}- only numbers and letters allowed in id",
-                COMPONENTS_PATH,
-                i + 2
-            ));
-        }
-        // Check if id is unique
-        else if components
-            .iter()
-            .fold(0, |acc, comp| if c.id == comp.id { acc + 1 } else { acc })
-            >= 2
-        {
-            findings.push(format!(
-                "{} row {}- id '{}' must be unique",
-                COMPONENTS_PATH,
-                i + 2,
-                c.id
-            ));
+        if let Some(mut issue) = check_component(c, components, IdToCheckIsFrom::FromExistingList) {
+            issue.insert_str(0, format!("{} row {}- ", COMPONENTS_PATH, i + 2).as_str());
+            findings.push(issue);
         }
     }
 
     Ok(findings)
+}
+
+pub fn check_component(
+    component: &Component,
+    components: &[Component],
+    origin: IdToCheckIsFrom,
+) -> Option<String> {
+    let uniqueness_threshold = match origin {
+        IdToCheckIsFrom::CommandLine => 1,
+        IdToCheckIsFrom::FromExistingList => 2,
+    };
+
+    // Check if id is empty
+    if component.id.trim().is_empty() {
+        Some("needs id".to_string())
+    }
+    // Check if id contains only letters, numbers, and underscores
+    else if !id_chars_are_valid(&component.id) {
+        Some("only numbers and letters allowed in id".to_string())
+    }
+    // Check if id is unique
+    else if components.iter().fold(0, |acc, comp| {
+        if component.id == comp.id {
+            acc + 1
+        } else {
+            acc
+        }
+    }) >= uniqueness_threshold
+    {
+        Some(format!("id '{}' must be unique", component.id))
+    }
+    // Default case
+    else {
+        None
+    }
 }
 
 fn check_stressors(
@@ -127,4 +141,12 @@ fn check_stressors(
 
 fn id_chars_are_valid(id: &str) -> bool {
     id.chars().all(|ch| ch.is_alphanumeric() || ch == '_')
+}
+
+pub enum IdToCheckIsFrom {
+    /// Not in the component list yet
+    CommandLine,
+
+    /// One of the list's own rows, it'll match itself once
+    FromExistingList,
 }
