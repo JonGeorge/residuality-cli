@@ -6,7 +6,7 @@ use crate::{
     views::check::print_findings,
 };
 
-pub fn run() -> Result<i32, Box<dyn std::error::Error>> {
+pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut findings: Vec<String> = Vec::new();
 
     let components: Vec<Component> = match get_rows(COMPONENTS_PATH) {
@@ -29,7 +29,7 @@ pub fn run() -> Result<i32, Box<dyn std::error::Error>> {
 
     if findings.is_empty() {
         println!("Everything looks good!");
-        Ok(0)
+        Ok(())
     } else {
         print_findings(findings);
         Err("check failed".into())
