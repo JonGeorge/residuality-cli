@@ -40,7 +40,7 @@ fn check_components(components: &[Component]) -> Result<Vec<String>, Box<dyn std
     let mut findings: Vec<String> = Vec::new();
 
     for (i, c) in components.iter().enumerate() {
-        if let Some(mut issue) = check_component(c, components, IdToCheckIsFrom::FromExistingList) {
+        if let Some(mut issue) = check_component(c, components, IdToCheckIsFrom::ExistingList) {
             issue.insert_str(0, format!("{} row {}- ", COMPONENTS_PATH, i + 2).as_str());
             findings.push(issue);
         }
@@ -56,7 +56,7 @@ pub fn check_component(
 ) -> Option<String> {
     let uniqueness_threshold = match origin {
         IdToCheckIsFrom::CommandLine => 1,
-        IdToCheckIsFrom::FromExistingList => 2,
+        IdToCheckIsFrom::ExistingList => 2,
     };
 
     // Check if id is empty
@@ -148,5 +148,5 @@ pub enum IdToCheckIsFrom {
     CommandLine,
 
     /// One of the list's own rows, it'll match itself once
-    FromExistingList,
+    ExistingList,
 }
