@@ -1,6 +1,10 @@
 use std::ops::Add;
 
-use crate::{model::{Component, Stressor}, storage::{COMPONENTS_PATH, STRESSORS_PATH, get_rows}, views::check::print_findings,};
+use crate::{
+    model::{Component, Stressor},
+    storage::{COMPONENTS_PATH, STRESSORS_PATH, get_rows},
+    views::check::print_findings,
+};
 
 pub fn run() -> Result<i32, Box<dyn std::error::Error>> {
     let mut findings: Vec<String> = Vec::new();
@@ -24,19 +28,15 @@ pub fn run() -> Result<i32, Box<dyn std::error::Error>> {
     findings.extend(check_stressors(&stressors, &components)?);
 
     if findings.is_empty() {
-         println!("Everything looks good!");
-         Ok(0)
+        println!("Everything looks good!");
+        Ok(0)
     } else {
         print_findings(findings);
         Err("check failed".into())
     }
-
-
 }
 
-fn check_components(
-    components: &[Component],
-) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+fn check_components(components: &[Component]) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let mut findings: Vec<String> = Vec::new();
 
     for (i, c) in components.iter().enumerate() {
@@ -64,13 +64,15 @@ fn check_stressors(
     let mut findings: Vec<String> = Vec::new();
 
     if components.is_empty() {
-        findings.push(format!("{} not checked due to invalid components file", STRESSORS_PATH));
-    }
-    else {
+        findings.push(format!(
+            "{} not checked due to invalid components file",
+            STRESSORS_PATH
+        ));
+    } else {
         for (i, stressor) in stressors.iter().enumerate() {
             let mut match_found = false;
 
-            for affected_component in &stressor.affected_components  {
+            for affected_component in &stressor.affected_components {
                 // Check affected component id characters
                 if !id_chars_are_valid(affected_component) {
                     findings.push(format!(
