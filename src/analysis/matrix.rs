@@ -43,9 +43,9 @@ pub fn generate_incidence_matrix(stressors: Vec<Stressor>, components: Vec<Compo
             })
             .collect(),
 
-        stressors: stressors,
+        stressors,
 
-        components: components,
+        components,
     }
 }
 
