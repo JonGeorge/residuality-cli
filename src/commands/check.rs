@@ -52,6 +52,19 @@ fn check_components(components: &[Component]) -> Result<Vec<String>, Box<dyn std
                 i + 2
             ));
         }
+        // Check if id is unique
+        else if components
+            .iter()
+            .fold(0, |acc, comp| if c.id == comp.id { acc + 1 } else { acc })
+            >= 2
+        {
+            findings.push(format!(
+                "{} row {}- id '{}' must be unique",
+                COMPONENTS_PATH,
+                i + 2,
+                c.id
+            ));
+        }
     }
 
     Ok(findings)
