@@ -95,7 +95,15 @@ res stressor list
 # derive the incidence matrix
 res matrix print           # to stdout
 res matrix export          # writes reports/matrix_<date>.csv
+
+# validate the architecture files
+res check
 ```
+
+`res check` reports every problem in one pass: unreadable or malformed CSV files,
+empty ids, ids with characters outside letters/numbers/underscores, and `affects`
+entries that reference a component that doesn't exist. It exits `0` when clean and
+`1` when there are findings.
 
 ### Command status
 
@@ -104,6 +112,7 @@ res matrix export          # writes reports/matrix_<date>.csv
 | `component add` / `list` | working |
 | `stressor add` / `list` | working |
 | `matrix print` / `export` | working |
+| `check` (validate architecture files) | working |
 | `init` | stub |
 | `triggers` (seven contagion triggers) | planned |
 | `test <file>` (empirical residual index) | planned |

@@ -18,6 +18,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
 
+        Commands::Check => {
+            commands::check::run()?;
+            Ok(())
+        }
+
         Commands::Component { action } => {
             commands::component::run(action)?;
             Ok(())

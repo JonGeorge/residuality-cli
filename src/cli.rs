@@ -10,6 +10,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Init,
+    Check,
     Component {
         #[command(subcommand)]
         action: ComponentAction,

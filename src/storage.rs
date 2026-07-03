@@ -77,6 +77,9 @@ pub fn write_matrix_to_csv(path: &str, rows: Vec<Vec<String>>) -> std::io::Resul
     // std::fs::write(path, rows)
 }
 
+/**
+ * Get deserialized rows from a path. For example, components and stressors.
+ */
 pub fn get_rows<T: DeserializeOwned>(path: &str) -> Result<Vec<T>, Box<dyn std::error::Error>> {
     let mut reader = csv::Reader::from_path(path)?;
     let things = reader.deserialize().collect::<Result<Vec<T>, _>>()?;
