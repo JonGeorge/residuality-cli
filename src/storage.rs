@@ -6,6 +6,8 @@ use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 
+use crate::model::Matrix;
+
 pub const COMPONENTS_PATH: &str = "architecture/components.csv";
 pub const STRESSORS_PATH: &str = "architecture/stressors.csv";
 
@@ -61,20 +63,42 @@ fn write_row<T: Serialize>(file: &File, row: &T, has_headers: bool) -> std::io::
     writer.flush()
 }
 
-pub fn write_matrix_to_csv(path: &str, rows: Vec<Vec<String>>) -> std::io::Result<()> {
-    // Check if directory exists. Without this, file write will fail
+// pub fn write_matrix_string_to_csv(path: &str, rows: Vec<Vec<String>>) -> std::io::Result<()> {
+//     // Check if directory exists. Without this, file write will fail
+//     if let Some(path) = std::path::Path::new(path).parent() {
+//         std::fs::create_dir_all(path)?;
+//     }
+
+//     let mut writer = csv::WriterBuilder::new().from_path(path)?;
+
+//     for row in rows {
+//         writer.write_record(row)?;
+//     }
+//     writer.flush()
+// }
+
+pub fn write_matrix_to_csv(path: &str, matrix: &Matrix) -> std::io::Result<()> {
+    // Check if directory exists. Without this, file write will fail if path doesnt exist
     if let Some(path) = std::path::Path::new(path).parent() {
         std::fs::create_dir_all(path)?;
     }
 
     let mut writer = csv::WriterBuilder::new().from_path(path)?;
 
-    for row in rows {
-        writer.write_record(row)?;
+    // For each component add to a vector ["", component1.id, component2.id, ... ]
+    writer.write_field("")?;
+    writer.write_record(
+        matrix
+            .components
+            .iter()
+            .map(|c| c.name.as_deref().unwrap_or(&c.id)),
+    )?;
+
+    for (i, stressor) in matrix.stressors.iter().enumerate() {
+        writer.write_field(stressor.name.as_deref().unwrap_or(&stressor.id))?;
+        writer.write_record(matrix.table[i].iter().map(|cell| cell.to_string()))?;
     }
     writer.flush()
-
-    // std::fs::write(path, rows)
 }
 
 /**
@@ -106,4 +130,44 @@ fn create_new_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
 
     writer.serialize(thing)?;
     writer.flush()
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::{Component, Stressor};
+
+    use super::*;
+
+    #[test]
+    fn builds_matrix() -> Result<(), Box<dyn std::error::Error>> {
+        let matrix = Matrix {
+            table: vec![vec![1, 0, 1]],
+            components: vec![
+                Component {
+                    id: "network".to_string(),
+                    name: Some("Network".to_string()),
+                },
+                Component {
+                    id: "server".to_string(),
+                    name: Some("Server".to_string()),
+                },
+                Component {
+                    id: "storage".to_string(),
+                    name: Some("Storage".to_string()),
+                },
+            ],
+            stressors: vec![Stressor {
+                id: "apocolypse".to_string(),
+                name: Some("Apocolypse".to_string()),
+                detection: None,
+                attractor: None,
+                business_reaction: None,
+                technical_change: None,
+                affected_components: vec![],
+            }],
+        };
+
+        write_matrix_to_csv("test.csv", &matrix)?;
+        Ok(())
+    }
 }
