@@ -120,12 +120,14 @@ fn create_new_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use crate::model::{Component, Stressor};
 
     use super::*;
 
     #[test]
-    fn builds_matrix() -> Result<(), Box<dyn std::error::Error>> {
+    fn builds_matrix() {
         let matrix = Matrix {
             table: vec![vec![1, 0, 1]],
             components: vec![
@@ -149,11 +151,29 @@ mod tests {
                 attractor: None,
                 business_reaction: None,
                 technical_change: None,
-                affected_components: vec![],
+                affected_components: BTreeSet::new(),
             }],
         };
 
-        write_matrix_to_csv("test.csv", &matrix)?;
-        Ok(())
+        let result = write_matrix_to_csv(
+            &std::env::temp_dir()
+                .join("2h995uhu24h5iu54h2iuh92ufpi4test.csv")
+                .to_string_lossy(),
+            &matrix,
+        );
+
+        match result {
+            Ok(()) => {
+                let generated_csv = std::fs::read_to_string(
+                    std::env::temp_dir().join("2h995uhu24h5iu54h2iuh92ufpi4test.csv"),
+                )
+                .unwrap_or("".to_string());
+
+                assert_eq!(generated_csv, ",Network,Server,Storage\nApocolypse,1,0,1\n");
+            }
+            Err(e) => {
+                assert!(false, "Couldn't write file. {e}");
+            }
+        }
     }
 }

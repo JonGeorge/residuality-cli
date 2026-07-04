@@ -5,6 +5,8 @@
 // Stressor (writing every field) and reads fields like `affected_components`.
 // Without `pub` on the fields, main.rs could name the type but not touch its insides.
 
+use std::collections::BTreeSet;
+
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 // A Component is one part of the architecture we're stressing.
@@ -35,23 +37,13 @@ pub struct Stressor {
         serialize_with = "serialize_affects",
         deserialize_with = "deserialize_affects"
     )]
-    pub affected_components: Vec<String>,
+    pub affected_components: BTreeSet<String>,
 }
 
-// A custom field deserializer. serde hands us a `deserializer` sitting on the raw
-// cell, and WE decide how to turn it into a Vec<String>. It's wired in by the
-// #[serde(deserialize_with = "...")] attribute above — the string must match this name.
-//
-//   <'de, D>             -> generic over any deserializer type D (CSV here; could be JSON)
-//   'de                  -> a lifetime: "how long the input data lives" (serde requires it)
-//   D: Deserializer<'de> -> the bound: D must actually be a deserializer
-//   -> Result<Vec<String>, D::Error> -> succeed with the Vec, or fail with serde's error
-fn deserialize_affects<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+fn deserialize_affects<'de, D>(deserializer: D) -> Result<BTreeSet<String>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    // Step 1 (done for you): pull the cell out as a plain String first, using serde's
-    // built-in String impl. Now `cell` is an ordinary owned String we can slice up.
     let cell = String::deserialize(deserializer)?;
 
     let affected_components = cell
@@ -63,14 +55,13 @@ where
     Ok(affected_components)
 }
 
-// A custom field serializer: collapse the Vec into ONE cell joined by ';'.
-// This is the inverse of deserialize_affects.
-fn serialize_affects<S>(affects: &[String], serializer: S) -> Result<S::Ok, S::Error>
+/// A custom field serializer: collapse the collection into ONE cell joined by ';'.
+fn serialize_affects<S>(affects: &BTreeSet<String>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    let str = affects.join(";");
-    serializer.serialize_str(&str)
+    let vect: Vec<&str> = affects.iter().map(|c| c.as_str()).collect();
+    serializer.serialize_str(vect.join(";").as_str())
 }
 
 pub struct Matrix {
