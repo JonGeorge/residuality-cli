@@ -63,20 +63,6 @@ fn write_row<T: Serialize>(file: &File, row: &T, has_headers: bool) -> std::io::
     writer.flush()
 }
 
-// pub fn write_matrix_string_to_csv(path: &str, rows: Vec<Vec<String>>) -> std::io::Result<()> {
-//     // Check if directory exists. Without this, file write will fail
-//     if let Some(path) = std::path::Path::new(path).parent() {
-//         std::fs::create_dir_all(path)?;
-//     }
-
-//     let mut writer = csv::WriterBuilder::new().from_path(path)?;
-
-//     for row in rows {
-//         writer.write_record(row)?;
-//     }
-//     writer.flush()
-// }
-
 pub fn write_matrix_to_csv(path: &str, matrix: &Matrix) -> std::io::Result<()> {
     // Check if directory exists. Without this, file write will fail if path doesnt exist
     if let Some(path) = std::path::Path::new(path).parent() {

@@ -1,4 +1,4 @@
-use crate::analysis::matrix::{generate_incidence_matrix};
+use crate::analysis::matrix::generate_incidence_matrix;
 use crate::cli::MatrixAction;
 use crate::storage::{
     COMPONENTS_PATH, STRESSORS_PATH, get_matrix_path_with_date, get_rows, write_matrix_to_csv,
