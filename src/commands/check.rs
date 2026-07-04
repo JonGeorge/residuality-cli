@@ -1,5 +1,3 @@
-use std::ops::Add;
-
 use crate::{
     model::{Component, Stressor},
     storage::{COMPONENTS_PATH, STRESSORS_PATH, get_rows},
@@ -12,7 +10,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let components: Vec<Component> = match get_rows(COMPONENTS_PATH) {
         Ok(c) => c,
         Err(e) => {
-            findings.push(format!("{} ", COMPONENTS_PATH).add(&e.to_string()));
+            findings.push(format!("{} {}", COMPONENTS_PATH, e));
             Vec::new()
         }
     };
@@ -20,7 +18,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let stressors: Vec<Stressor> = match get_rows(STRESSORS_PATH) {
         Ok(s) => s,
         Err(e) => {
-            findings.push(format!("{} ", STRESSORS_PATH).add(&e.to_string()));
+            findings.push(format!("{} {}", STRESSORS_PATH, e));
             Vec::new()
         }
     };
@@ -40,9 +38,8 @@ fn check_components(components: &[Component]) -> Result<Vec<String>, Box<dyn std
     let mut findings: Vec<String> = Vec::new();
 
     for (i, c) in components.iter().enumerate() {
-        if let Some(mut issue) = check_component(c, components, IdToCheckIsFrom::ExistingList) {
-            issue.insert_str(0, format!("{} row {}- ", COMPONENTS_PATH, i + 2).as_str());
-            findings.push(issue);
+        if let Some(issue) = check_component(c, components, IdToCheckIsFrom::ExistingList) {
+            findings.push(format!("{} row {}- {}", COMPONENTS_PATH, i + 2, issue));
         }
     }
 
