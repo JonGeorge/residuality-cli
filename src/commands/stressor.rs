@@ -1,6 +1,9 @@
 use std::collections::BTreeSet;
 
-use inquire::{InquireError, MultiSelect, Text};
+use inquire::{
+    InquireError, MultiSelect, Text,
+    ui::{RenderConfig, Styled},
+};
 
 use crate::{
     cli::StressorAction,
@@ -32,6 +35,11 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
                 Ok(append_csv(STRESSORS_PATH, &new_stressor)?)
             }
             None => {
+                inquire::set_global_render_config(
+                    RenderConfig::default().with_canceled_prompt_indicator(
+                        Styled::new("< exited >").with_fg(inquire::ui::Color::DarkRed),
+                    ),
+                );
                 prompt_for_stressors()?;
                 Ok(())
             }
@@ -57,13 +65,8 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
         return Err("no components yet — add some first, the affects picker needs them".into());
     }
 
-    // let labels: Vec<&str> = components.iter().map(|c| c.name.as_deref().unwrap_or(&c.id.as_str())).collect();
-
     loop {
-        let name = match Text::new("Name: ")
-            .with_help_message("Esc to quit")
-            .prompt()
-        {
+        let name = match Text::new("Name:").with_help_message("Esc to quit").prompt() {
             Err(InquireError::OperationCanceled) => break,
             Err(e) => return Err(e.into()),
             Ok(n) => n,
@@ -73,51 +76,62 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
             .with_help_message("Enter to skip, Esc to quit")
             .prompt_skippable()
         {
-            Err(InquireError::OperationCanceled) => break,
             Err(e) => return Err(e.into()),
-            Ok(n) => n,
+            Ok(n) => match &n {
+                None => break,
+                Some(_) => n,
+            },
         };
 
         let attractor = match Text::new("Attractor:")
             .with_help_message("Enter to skip, Esc to quit")
             .prompt_skippable()
         {
-            Err(InquireError::OperationCanceled) => break,
             Err(e) => return Err(e.into()),
-            Ok(n) => n,
+            Ok(n) => match &n {
+                None => break,
+                Some(_) => n,
+            },
         };
 
         let business_reaction = match Text::new("Business reaction:")
             .with_help_message("Enter to skip, Esc to quit")
             .prompt_skippable()
         {
-            Err(InquireError::OperationCanceled) => break,
             Err(e) => return Err(e.into()),
-            Ok(n) => n,
+            Ok(n) => match &n {
+                None => break,
+                Some(_) => n,
+            },
         };
 
         let technical_change = match Text::new("Technical change:")
             .with_help_message("Enter to skip, Esc to quit")
             .prompt_skippable()
         {
-            Err(InquireError::OperationCanceled) => break,
             Err(e) => return Err(e.into()),
-            Ok(n) => n,
+            Ok(n) => match &n {
+                None => break,
+                Some(_) => n,
+            },
         };
 
         let selected_affected_components = MultiSelect::new("Affects: ", components.clone())
             .with_page_size(10)
-            .with_help_message("type to filter, space to toggle, enter to confirm, esc to cancel")
+            .with_help_message(
+                "Type to filter, Space to toggle, Enter to confirm, Esc to cancel entire stressor",
+            )
             .prompt();
 
         let affected_components = match selected_affected_components {
             Ok(c) => c,
-            Err(InquireError::OperationCanceled) => continue,
+            Err(InquireError::OperationCanceled) => break,
             Err(e) => return Err(e.into()),
         };
 
+        let next_id = get_next_stressor_id()?;
         let new_stressor = Stressor {
-            id: Some(get_next_stressor_id()?),
+            id: Some(next_id.clone()),
             name: Some(name),
             detection,
             technical_change,
@@ -127,6 +141,7 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
         };
 
         append_csv(STRESSORS_PATH, &new_stressor)?;
+        println!("Saved #{}\n", next_id);
     }
 
     Ok(())
