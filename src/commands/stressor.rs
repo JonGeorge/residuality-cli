@@ -21,10 +21,32 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
             business_reaction,
             technical_change,
             affected_components,
-        } => match &id {
-            Some(_) => {
+        } => {
+            let no_args_provided = id.is_none()
+                && name.is_none()
+                && detection.is_none()
+                && attractor.is_none()
+                && business_reaction.is_none()
+                && technical_change.is_none()
+                && affected_components.is_empty();
+
+            if no_args_provided {
+                inquire::set_global_render_config(
+                    RenderConfig::default().with_canceled_prompt_indicator(
+                        Styled::new("< exited >").with_fg(inquire::ui::Color::DarkRed),
+                    ),
+                );
+                prompt_for_stressors()?;
+                Ok(())
+            } else {
+                let new_id = if id.is_none() {
+                    Some(get_next_stressor_id()?)
+                } else {
+                    id
+                };
+
                 let new_stressor = Stressor {
-                    id,
+                    id: new_id,
                     name,
                     detection,
                     attractor,
@@ -34,16 +56,7 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
                 };
                 Ok(append_csv(STRESSORS_PATH, &new_stressor)?)
             }
-            None => {
-                inquire::set_global_render_config(
-                    RenderConfig::default().with_canceled_prompt_indicator(
-                        Styled::new("< exited >").with_fg(inquire::ui::Color::DarkRed),
-                    ),
-                );
-                prompt_for_stressors()?;
-                Ok(())
-            }
-        },
+        }
 
         StressorAction::List => {
             let stressors: Vec<Stressor> = get_rows(STRESSORS_PATH)?;

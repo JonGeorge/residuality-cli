@@ -46,22 +46,22 @@ pub enum StressorAction {
         #[arg(long)]
         id: Option<String>,
 
-        #[arg(long, requires = "id")]
+        #[arg(long)]
         name: Option<String>,
 
-        #[arg(long, requires = "id")]
+        #[arg(long)]
         detection: Option<String>,
 
-        #[arg(long, requires = "id")]
+        #[arg(long)]
         attractor: Option<String>,
 
-        #[arg(long, requires = "id")]
+        #[arg(long)]
         business_reaction: Option<String>,
 
-        #[arg(long, requires = "id")]
+        #[arg(long)]
         technical_change: Option<String>,
 
-        #[arg(long = "affects", requires = "id", value_delimiter = ';')]
+        #[arg(long = "affects", value_delimiter = ';')]
         affected_components: Vec<String>,
     },
 
