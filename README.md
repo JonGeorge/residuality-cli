@@ -63,59 +63,50 @@ reports/
 ```
 
 Each stressor records how you'd *detect* it, the *attractor* it pulls the system toward, the
-*business reaction*, the *technical change* that would let the system survive, and which components
-it *affects* (semicolon-separated ids). The incidence matrix is always derived from these files,
-never stored as editable data.
+*business reaction*, the *technical change* that would let the system survive, and which components it *affects* (semicolon-separated ids). The incidence matrix is always derived from these files.
 
-Deliberately absent, per the method: stressors have **no probability or cost fields** (you stress
-the architecture first and worry about likelihood later), and there is no stressor template
-library — stressors are specific to your system.
+Stressors have **no probability or cost fields** (you stress the architecture first and worry about likelihood later), and there is no stressor template library — stressors are specific to your system.
 
 ## Usage
-
-Requires a [Rust toolchain](https://rustup.rs) (edition 2024). Build with `cargo build`; the
-binary is available as both `residuality` and the shorter `res`.
-
+ 
+Three steps, in the order you'd actually work:
+ 
+### 1. List the parts of your architecture
+ 
 ```sh
-# add components
-res component add storage "Storage Layer (CSV read/write)"
-res component list        # alias: ls
-
-# log a stressor and the components it touches
-res stressor add \
-  --id malformed_csv \
-  --name "Malformed CSV row" \
-  --detection "csv::Error on deserialize" \
-  --attractor "strict schema validation" \
-  --business-reaction "user loses trust in tool output" \
-  --technical-change "validate headers and surface row number" \
-  --affects "storage;deserializer"
-res stressor list
-
-# derive the incidence matrix
-res matrix print           # to stdout
-res matrix export          # writes reports/matrix_<date>.csv
-
-# validate the architecture files
-res check
+residuality component add capture_alpr CaptureALPR
+residuality component add billing_decision BillingDecision
+residuality component add charge_command ChargeCommand
 ```
-
-`res check` reports every problem in one pass: unreadable or malformed CSV files,
-empty ids, ids with characters outside letters/numbers/underscores, and `affects`
-entries that reference a component that doesn't exist. It exits `0` when clean and
-`1` when there are findings.
-
-### Command status
-
-| Command | Status |
-|---|---|
-| `component add` / `list` | working |
-| `stressor add` / `list` | working |
-| `matrix print` / `export` | working |
-| `check` (validate architecture files) | working |
-| `init` | stub |
-| `triggers` (seven contagion triggers) | planned |
-| `test <file>` (empirical residual index) | planned |
+ 
+### 2. Stress them — one stressor per residue
+ 
+Just run the command and answer the prompts (name, detection, attractor, business
+reaction, technical change, then pick which components it hits):
+ 
+```sh
+residuality stressor add
+```
+ 
+### 3. Analysis
+ 
+```sh
+residuality matrix print
+```
+ 
+```
+stressor      capture_alpr  billing_decision  charge_command    Σ
+────────────────────────────────────────────────────────────────
+Failed login        ●               ●                ●          3
+New car model       ·               ·                ●          1
+────────────────────────────────────────────────────────────────
+Σ                   1               1                2
+```
+ 
+Row totals show which stressors hit hardest; column totals show which components are
+most exposed; two dots on one row that light up together reveal hidden coupling.
+ 
+**add components → add stressors → analyze the matrix.**
 
 ## References
 
