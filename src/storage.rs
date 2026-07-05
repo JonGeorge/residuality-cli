@@ -34,10 +34,10 @@ pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
             if file.metadata()?.len() > 0 {
                 // file has data
                 ensure_last_char_is_new_line(&mut file)?;
-                write_row(&file, thing, false)?;
+                write_row_to_file_from_struct(&file, thing, false)?;
             } else if file.metadata()?.len() == 0 {
                 // file has no data
-                write_row(&file, thing, true)?;
+                write_row_to_file_from_struct(&file, thing, true)?;
             }
         }
         Err(e) => match e.kind() {
@@ -54,13 +54,49 @@ pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     Ok(())
 }
 
-fn write_row<T: Serialize>(file: &File, row: &T, has_headers: bool) -> std::io::Result<()> {
+fn write_row_to_file_from_struct<T: Serialize>(
+    file: &File,
+    row: &T,
+    has_headers: bool,
+) -> std::io::Result<()> {
     let mut writer = csv::WriterBuilder::new()
         .has_headers(has_headers)
         .from_writer(file);
 
     writer.serialize(row)?;
     writer.flush()
+}
+
+pub fn write_rows_to_path_from_vec(path: &str, rows: Vec<Vec<String>>) -> std::io::Result<()> {
+    if let Some(path) = std::path::Path::new(path).parent() {
+        std::fs::create_dir_all(path)?;
+    }
+
+    let mut writer = csv::WriterBuilder::new().from_path(path)?;
+
+    for row in rows {
+        writer.write_record(row)?;
+    }
+    writer.flush()
+}
+
+pub fn get_header_row_from_struct<T: Serialize>(
+    thing: &T,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let mut wtr = csv::WriterBuilder::new()
+        .has_headers(true)
+        .from_writer(vec![]);
+
+    wtr.serialize(thing)?;
+
+    let bytes = wtr.into_inner()?;
+    let text = String::from_utf8(bytes)?;
+    let first_line = text.lines().next();
+
+    match first_line {
+        Some(line) => Ok(line.split(',').map(str::to_string).collect()),
+        None => Err("No first line".into()),
+    }
 }
 
 pub fn write_matrix_to_csv(path: &str, matrix: &Matrix) -> std::io::Result<()> {
@@ -121,7 +157,7 @@ fn ensure_last_char_is_new_line(file: &mut File) -> std::io::Result<()> {
     Ok(())
 }
 
-fn create_new_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
+pub fn create_new_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     let mut writer = csv::WriterBuilder::new()
         .has_headers(true)
         .from_path(path)?;

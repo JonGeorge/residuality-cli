@@ -14,7 +14,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Commands::Init => {
-            println!("Initialized...");
+            commands::init::run()?;
             Ok(())
         }
 
