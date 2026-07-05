@@ -44,24 +44,24 @@ pub enum ComponentAction {
 pub enum StressorAction {
     Add {
         #[arg(long)]
-        id: String,
+        id: Option<String>,
 
-        #[arg(long)]
+        #[arg(long, requires = "id")]
         name: Option<String>,
 
-        #[arg(long)]
+        #[arg(long, requires = "id")]
         detection: Option<String>,
 
-        #[arg(long)]
+        #[arg(long, requires = "id")]
         attractor: Option<String>,
 
-        #[arg(long)]
+        #[arg(long, requires = "id")]
         business_reaction: Option<String>,
 
-        #[arg(long)]
+        #[arg(long, requires = "id")]
         technical_change: Option<String>,
 
-        #[arg(long = "affects", value_delimiter = ';')]
+        #[arg(long = "affects", requires = "id", value_delimiter = ';')]
         affected_components: Vec<String>,
     },
 

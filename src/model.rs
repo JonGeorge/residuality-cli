@@ -5,7 +5,7 @@
 // Stressor (writing every field) and reads fields like `affected_components`.
 // Without `pub` on the fields, main.rs could name the type but not touch its insides.
 
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, fmt};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -16,10 +16,19 @@ pub struct Component {
     pub name: Option<String>,
 }
 
+impl fmt::Display for Component {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.name {
+            Some(n) => write!(f, "{}", n),
+            None => write!(f, "{}", self.id),
+        }
+    }
+}
+
 // A Stressor is an environmental pressure on the architecture.
 #[derive(Serialize, Deserialize)]
 pub struct Stressor {
-    pub id: String,
+    pub id: Option<String>,
 
     pub name: Option<String>,
 

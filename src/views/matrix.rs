@@ -19,7 +19,11 @@ pub fn print_matrix(matrix: &Matrix) {
 
     // --- one row per stressor: ● = affected, · = not; row sum on the right ---
     for (row, s) in matrix.table.iter().zip(&matrix.stressors) {
-        print!("{:<1$}", s.name.as_deref().unwrap_or(&s.id), label_w);
+        print!(
+            "{:<1$}",
+            s.name.as_deref().unwrap_or(s.id.as_deref().unwrap()),
+            label_w
+        );
         for (cell, c) in row.iter().zip(&matrix.components) {
             let glyph = if *cell == 1 { "●" } else { "·" };
             print!("  {:^1$}", glyph, c.id.len());
@@ -43,7 +47,7 @@ pub fn print_matrix(matrix: &Matrix) {
 fn label_width(stressors: &[Stressor]) -> usize {
     stressors
         .iter()
-        .map(|s| s.id.len())
+        .map(|s| s.id.as_deref().unwrap().len())
         .max()
         .unwrap_or(0)
         .max("stressor".len())
