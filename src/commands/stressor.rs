@@ -71,7 +71,10 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
-    let raw_components: Vec<Component> = get_rows(COMPONENTS_PATH)?;
+    let raw_components: Vec<Component> = match get_rows(COMPONENTS_PATH) {
+        Ok(s) => s,
+        Err(_) => Vec::new(),
+    };
     let components: Vec<&Component> = raw_components.iter().collect();
 
     if components.is_empty() {
@@ -161,7 +164,10 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn get_next_stressor_id() -> Result<String, Box<dyn std::error::Error>> {
-    let stressors: Vec<Stressor> = get_rows(STRESSORS_PATH)?;
+    let stressors: Vec<Stressor> = match get_rows(STRESSORS_PATH) {
+        Ok(s) => s,
+        Err(_) => Vec::new(),
+    };
 
     let max_id = stressors
         .iter()
