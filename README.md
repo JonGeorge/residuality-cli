@@ -1,7 +1,7 @@
 # Residuality CLI
 
 A small Rust CLI for applying **Residuality Theory** — a software architecture method created by
-[Barry M. O'Reilly](https://leanpub.com/u/barrymoreilly) — to a codebase. It keeps your stressor
+[Barry M. O'Reilly](https://leanpub.com/u/barrymoreilly). It keeps your stressor
 analysis in plain CSV files committed next to the code, and derives reports (an incidence matrix,
 contagion triggers, and an empirical "residual index") from them.
 
@@ -31,8 +31,7 @@ The core vocabulary, as defined in O'Reilly's
 The method, roughly: propose a naive architecture, bombard it with stressors one at a time, and for
 each stressor describe how the business reacts and what technical change would let the system
 survive. Each surviving configuration is a residue. Integrating many residues produces an
-architecture that holds up under stressors you *never analysed* — because stressor analysis
-uncovers the hidden coupling in the system, not because you predicted the future.
+architecture that holds up under stressors you never analysed.
 
 Two ideas matter for how this tool works, both developed in the
 [2022 follow-up paper](https://www.sciencedirect.com/science/article/pii/S1877050922004975)
@@ -50,9 +49,9 @@ For a proper introduction read O'Reilly's short book,
 (Leanpub, 2024) — this project follows its spreadsheet-driven workflow, which is why everything
 here is a CSV file.
 
-## What the CLI does
+## What this CLI does
 
-Your architecture lives in two human-editable CSV files (one double-click away from Excel/Sheets):
+Your architecture lives in CSV files (one double-click away from Excel/Sheets):
 
 ```
 architecture/
@@ -65,11 +64,12 @@ reports/
 Each stressor records how you'd *detect* it, the *attractor* it pulls the system toward, the
 *business reaction*, the *technical change* that would let the system survive, and which components it *affects* (semicolon-separated ids). The incidence matrix is always derived from these files.
 
-Stressors have **no probability or cost fields** (you stress the architecture first and worry about likelihood later), and there is no stressor template library — stressors are specific to your system.
+Stressors have **no probability or cost fields** (you stress the architecture first and worry about likelihood later). There is no stressor template library — stressors are specific to your system.
 
 ## Usage
  
 Three steps, in the order you'd actually work:
+**add components → add stressors → analyze the matrix.**
  
 ### 1. List the parts of your architecture
  
@@ -82,13 +82,20 @@ residuality component add charge_command ChargeCommand
 ### 2. Stress them — one stressor per residue
  
 Just run the command and answer the prompts (name, detection, attractor, business
-reaction, technical change, then pick which components it hits):
+reaction, technical change, then pick which components are affected):
  
 ```sh
 residuality stressor add
 ```
  
-### 3. Analysis
+### 3. Analyze the relationships
+
+Export your matrix to CSV
+```sh
+residuality matrix export
+```
+
+Or view it in your terminal
  
 ```sh
 residuality matrix print
@@ -102,11 +109,21 @@ New car model       ·               ·                ●          1
 ────────────────────────────────────────────────────────────────
 Σ                   1               1                2
 ```
- 
-Row totals show which stressors hit hardest; column totals show which components are
-most exposed; two dots on one row that light up together reveal hidden coupling.
- 
-**add components → add stressors → analyze the matrix.**
+
+### 4. Interpret findings
+**High row totals** - shows unnecessary boundary separations, consider less granular components (increase coupling)
+
+**High column totals** - shows components that are sensitive to stress, consider more granular components (decrease coupling)
+
+**Identical or similar columns** - shows components that have a similar response to stress, consider merging them into one component or extracting a shared third component that may be hiding in them both
+
+**More than one '1' (or '●') in a row** - shows non-functional coupling between two or more components, stop treating them as independent, consider add failure mode behavior (fallback, decoupling point, local autonomy, compensating action, etc.)
+
+**Many high numbers overall** - shows dense coupling to the environment, the problem is the shape of the decomposition itself not any single component; nearly every stressor ripples through nearly every component and nearly every component is exposed to many stressors, consider a full redesign
+
+**Compound stressors** - Pick a stressor's row and look at which components have 1s — those are your damaged/degraded components while the system sits in that attractor. Now, while imagining the system in that weakened state, ask: "and what if a second stressor hits before we've recovered?" That's a vulnerability that exists in no single row since it only appears in the sequence. This shows combinations of vulnerabilities that only appear when a second stressor hits an already damaged system. As you stack combinations, you'll notice some components keep showing up in the damaged set. Consider hardening the components that appear in multiple damage sets. Add residues specifically for the multi-stressor sequences that leave the system unable to recover. Be aware of traps, for example, your detection mechanism for stressor B was destroyed by stressor A. When you find one of these, you treat the sequence itself as a new row in your matrix. It becomes a residue like any other.
+
+**Columns that sum to zero** - shows components that appear invulnerable but are almost certainly just under-stressed; consider generating more stressors aimed at that part of the system before trusting the matrix
 
 ## References
 
