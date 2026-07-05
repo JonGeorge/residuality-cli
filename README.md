@@ -70,7 +70,16 @@ Stressors have **no probability or cost fields** (you stress the architecture fi
  
 Three steps, in the order you'd actually work:
 **add components → add stressors → analyze the matrix.**
- 
+
+### 0. Set up the CSV files
+
+```sh
+residuality init
+```
+
+Creates `architecture/components.csv` and `architecture/stressors.csv` with their header rows.
+Safe to re-run — existing files are left untouched.
+
 ### 1. List the parts of your architecture
  
 ```sh
