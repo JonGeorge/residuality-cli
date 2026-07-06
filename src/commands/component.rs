@@ -34,7 +34,7 @@ pub fn run(action: ComponentAction) -> Result<(), Box<dyn std::error::Error>> {
                 Err(e) => return Err(e),
             };
             for component in components {
-                println!("{}", component.id);
+                println!("{}", component);
             }
             Ok(())
         }

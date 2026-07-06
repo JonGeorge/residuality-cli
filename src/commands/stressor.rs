@@ -71,6 +71,10 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
             for stressor in stressors {
                 if let Some(n) = stressor.name {
                     println!("{}", n);
+                } else if let Some(id) = stressor.id {
+                    println!("{}", id);
+                } else {
+                    println!("< Err: No Name or ID >");
                 }
             }
             Ok(())
@@ -84,6 +88,7 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) if is_missing_file_err(e.as_ref()) => Vec::new(),
         Err(e) => return Err(e),
     };
+
     let components: Vec<&Component> = raw_components.iter().collect();
 
     if components.is_empty() {
