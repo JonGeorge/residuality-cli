@@ -8,7 +8,7 @@ use inquire::{
 use crate::{
     cli::StressorAction,
     model::{Component, Stressor},
-    storage::{COMPONENTS_PATH, STRESSORS_PATH, append_csv, get_rows},
+    storage::{COMPONENTS_PATH, STRESSORS_PATH, append_csv, get_rows, is_missing_file_err},
 };
 
 pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
@@ -59,7 +59,15 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
         }
 
         StressorAction::List => {
-            let stressors: Vec<Stressor> = get_rows(STRESSORS_PATH)?;
+            let stressors: Vec<Stressor> = match get_rows(STRESSORS_PATH) {
+                Ok(s) => s,
+                Err(e) if is_missing_file_err(e.as_ref()) => {
+                    eprintln!("Stressor file not found");
+                    Vec::new()
+                }
+                Err(e) => return Err(e),
+            };
+
             for stressor in stressors {
                 if let Some(n) = stressor.name {
                     println!("{}", n);
@@ -73,7 +81,8 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
 fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
     let raw_components: Vec<Component> = match get_rows(COMPONENTS_PATH) {
         Ok(s) => s,
-        Err(_) => Vec::new(),
+        Err(e) if is_missing_file_err(e.as_ref()) => Vec::new(),
+        Err(e) => return Err(e),
     };
     let components: Vec<&Component> = raw_components.iter().collect();
 
@@ -166,7 +175,8 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
 fn get_next_stressor_id() -> Result<String, Box<dyn std::error::Error>> {
     let stressors: Vec<Stressor> = match get_rows(STRESSORS_PATH) {
         Ok(s) => s,
-        Err(_) => Vec::new(),
+        Err(e) if is_missing_file_err(e.as_ref()) => Vec::new(),
+        Err(e) => return Err(e),
     };
 
     let max_id = stressors

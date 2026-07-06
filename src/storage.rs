@@ -140,6 +140,17 @@ pub fn get_rows<T: DeserializeOwned>(path: &str) -> Result<Vec<T>, Box<dyn std::
     Ok(things)
 }
 
+/// True when err means the file doesn't exist, some callers may treat this as an empty table
+pub fn is_missing_file_err(err: &(dyn std::error::Error + 'static)) -> bool {
+    match err.downcast_ref::<csv::Error>() {
+        Some(csv_err) => match csv_err.kind() {
+            csv::ErrorKind::Io(io_err) => io_err.kind() == std::io::ErrorKind::NotFound,
+            _ => false,
+        },
+        None => false,
+    }
+}
+
 fn ensure_last_char_is_new_line(file: &mut File) -> std::io::Result<()> {
     file.seek(SeekFrom::End(-1))?;
     let mut last_char = [0u8; 1]; // 1 byte
