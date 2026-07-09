@@ -41,14 +41,12 @@ pub fn sum_cols(matrix: &Matrix) -> Vec<u32> {
 pub fn sum_rows(matrix: &Matrix) -> Vec<u32> {
     let mut row_sums = Vec::new();
     for (i, _) in matrix.table.iter().enumerate() {
-        row_sums.push(matrix.table[i].iter().fold(0, |acc, col| {
-            if *col == 1 {
-                acc + 1
-            }
-            else {
-                acc
-            }
-        }));
+        row_sums.push(matrix.table[i].iter().fold(
+            0,
+            |acc, col| {
+                if *col == 1 { acc + 1 } else { acc }
+            },
+        ));
     }
 
     row_sums
@@ -56,9 +54,9 @@ pub fn sum_rows(matrix: &Matrix) -> Vec<u32> {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::BTreeSet, vec};
+    use std::vec;
 
-use super::*;
+    use super::*;
 
     // Tiny builders so each test isn't buried in empty-string fields.
     fn component(id: &str) -> Component {
@@ -105,28 +103,36 @@ use super::*;
 
     #[test]
     fn sum_matrix_cols_correctly() {
-        let s1 = Stressor { id: None, name: None, detection: None, attractor: None, business_reaction: None, technical_change: None, affected_components: BTreeSet::new() };
-        let s2 = Stressor { id: None, name: None, detection: None, attractor: None, business_reaction: None, technical_change: None, affected_components: BTreeSet::new() };
+        let s1 = stressor("s1", &["a", "c"]);
+        let s2 = stressor("s2", &["a", "c"]);
 
-        let c1 = Component { id: "c1".to_string(), name: None };
-        let c2 = Component { id: "c2".to_string(), name: None };
-        let c3 = Component { id: "c3".to_string(), name: None };
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
 
-        let matrix = Matrix { table: vec![vec![1,0,1], vec![0, 0, 1]], stressors: vec![s1, s2], components: vec![c1, c2, c3] };
+        let matrix = Matrix {
+            table: vec![vec![1, 0, 1], vec![0, 0, 1]],
+            stressors: vec![s1, s2],
+            components: vec![c1, c2, c3],
+        };
 
         assert_eq!(sum_cols(&matrix), vec![1, 0, 2]);
     }
 
     #[test]
     fn sum_matrix_rows_correctly() {
-        let s1 = Stressor { id: None, name: None, detection: None, attractor: None, business_reaction: None, technical_change: None, affected_components: BTreeSet::new() };
-        let s2 = Stressor { id: None, name: None, detection: None, attractor: None, business_reaction: None, technical_change: None, affected_components: BTreeSet::new() };
+        let s1 = stressor("s1", &["a", "c"]);
+        let s2 = stressor("s2", &["a", "c"]);
 
-        let c1 = Component { id: "c1".to_string(), name: None };
-        let c2 = Component { id: "c2".to_string(), name: None };
-        let c3 = Component { id: "c3".to_string(), name: None };
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
 
-        let matrix = Matrix { table: vec![vec![1,0,1], vec![1, 1, 1]], stressors: vec![s1, s2], components: vec![c1, c2, c3] };
+        let matrix = Matrix {
+            table: vec![vec![1, 0, 1], vec![1, 1, 1]],
+            stressors: vec![s1, s2],
+            components: vec![c1, c2, c3],
+        };
 
         assert_eq!(sum_rows(&matrix), vec![2, 3]);
     }
