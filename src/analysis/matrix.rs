@@ -56,7 +56,11 @@ pub fn get_untouched_components(matrix: &Matrix) -> Vec<String> {
     let mut unstressed_component_ids: Vec<String> = Vec::new();
 
     for c in matrix.components.iter() {
-        if !matrix.stressors.iter().any(|s| s.affected_components.contains(&c.id)) {
+        if !matrix
+            .stressors
+            .iter()
+            .any(|s| s.affected_components.contains(&c.id))
+        {
             if !unstressed_component_ids.contains(&c.id) {
                 unstressed_component_ids.push(c.id.clone());
             }
@@ -167,5 +171,25 @@ mod tests {
         };
 
         assert_eq!(get_untouched_components(&matrix), vec!["c2"]);
+    }
+
+    #[test]
+    fn no_unstressed_components_identified() {
+        let s1 = stressor("s1", &["c2", "c3"]);
+        let s2 = stressor("s2", &["c1", "c"]);
+
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![vec![1, 0, 1], vec![1, 1, 1]],
+            stressors: vec![s1, s2],
+            components: vec![c1, c2, c3],
+        };
+
+        let result: Vec<String> = Vec::new();
+
+        assert_eq!(get_untouched_components(&matrix), result);
     }
 }
