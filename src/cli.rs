@@ -32,7 +32,7 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum ComponentAction {
     Add {
-        id: String,
+        id: Option<String>,
         name: Option<String>,
     },
 
