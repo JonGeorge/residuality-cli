@@ -14,13 +14,13 @@ pub const STRESSORS_PATH: &str = "architecture/stressors.csv";
 pub fn get_matrix_path_with_date() -> String {
     let date = chrono::Local::now().format("%Y%m%d");
 
-    format!("reports/matrix_{}.csv", date)
+    format!("architecture/reports/{}_matrix.csv", date)
 }
 
 pub fn get_analysis_path_with_date() -> String {
     let date = chrono::Local::now().format("%Y%m%d");
 
-    format!("reports/analysis_{}.csv", date)
+    format!("architecture/reports/{}_analysis.csv", date)
 }
 
 pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
