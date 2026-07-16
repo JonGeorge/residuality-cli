@@ -23,7 +23,7 @@ pub enum Commands {
         #[command(subcommand)]
         action: MatrixAction,
     },
-    Triggers,
+    Analyze,
     Test {
         file: String,
     },

@@ -17,6 +17,12 @@ pub fn get_matrix_path_with_date() -> String {
     format!("reports/matrix_{}.csv", date)
 }
 
+pub fn get_analysis_path_with_date() -> String {
+    let date = chrono::Local::now().format("%Y%m%d");
+
+    format!("reports/analysis_{}.csv", date)
+}
+
 pub fn append_csv<T: Serialize>(path: &str, thing: &T) -> std::io::Result<()> {
     // Check if directory exists. Without this, file write will fail
     if let Some(path) = std::path::Path::new(path).parent() {

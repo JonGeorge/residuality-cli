@@ -24,6 +24,44 @@ pub fn generate_incidence_matrix(stressors: Vec<Stressor>, components: Vec<Compo
     }
 }
 
+pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<String> {
+    Vec::new()
+}
+
+pub fn analyze_highest_col_totals(matrix: &Matrix) -> Vec<String> {
+    Vec::new()
+}
+
+pub fn analyze_coupling(matrix: &Matrix) -> Vec<String> {
+    Vec::new()
+}
+
+pub fn analyze_similar_responses_to_stress(matrix: &Matrix) -> Vec<String> {
+    Vec::new()
+}
+
+pub fn analyze_unstressed_components(matrix: &Matrix) -> Vec<String> {
+    Vec::new()
+}
+
+pub fn get_unstressed_components(matrix: &Matrix) -> Vec<String> {
+    let mut unstressed_component_ids: Vec<String> = Vec::new();
+
+    for c in matrix.components.iter() {
+        if !matrix
+            .stressors
+            .iter()
+            .any(|s| s.affected_components.contains(&c.id))
+        {
+            if !unstressed_component_ids.contains(&c.id) {
+                unstressed_component_ids.push(c.id.clone());
+            }
+        }
+    }
+
+    unstressed_component_ids
+}
+
 pub fn sum_cols(matrix: &Matrix) -> Vec<u32> {
     let mut col_sums = Vec::new();
     for (col, _) in matrix.components.iter().enumerate() {
@@ -50,24 +88,6 @@ pub fn sum_rows(matrix: &Matrix) -> Vec<u32> {
     }
 
     row_sums
-}
-
-pub fn get_untouched_components(matrix: &Matrix) -> Vec<String> {
-    let mut unstressed_component_ids: Vec<String> = Vec::new();
-
-    for c in matrix.components.iter() {
-        if !matrix
-            .stressors
-            .iter()
-            .any(|s| s.affected_components.contains(&c.id))
-        {
-            if !unstressed_component_ids.contains(&c.id) {
-                unstressed_component_ids.push(c.id.clone());
-            }
-        }
-    }
-
-    unstressed_component_ids
 }
 
 #[cfg(test)]
@@ -170,7 +190,7 @@ mod tests {
             components: vec![c1, c2, c3],
         };
 
-        assert_eq!(get_untouched_components(&matrix), vec!["c2"]);
+        assert_eq!(get_unstressed_components(&matrix), vec!["c2"]);
     }
 
     #[test]
@@ -190,6 +210,6 @@ mod tests {
 
         let result: Vec<String> = Vec::new();
 
-        assert_eq!(get_untouched_components(&matrix), result);
+        assert_eq!(get_unstressed_components(&matrix), result);
     }
 }

@@ -38,6 +38,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
 
+        Commands::Analyze => {
+            commands::analyze::run()?;
+            Ok(())
+        }
+
         _ => {
             eprintln!("not implemented yet");
             Ok(())
