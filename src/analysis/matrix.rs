@@ -1,3 +1,5 @@
+use std::cmp::Reverse;
+
 use crate::model::{Component, Matrix, Stressor};
 
 pub fn generate_incidence_matrix(stressors: Vec<Stressor>, components: Vec<Component>) -> Matrix {
@@ -36,8 +38,7 @@ pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<(&Stressor, u32)> {
         .filter(|(_, sum)| *sum as f32 > average)
         .collect();
 
-    top_stressors.sort_by_cached_key(|s| s.1);
-    top_stressors.reverse();
+    top_stressors.sort_by_key(|s| Reverse(s.1));
     top_stressors
 }
 
