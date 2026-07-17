@@ -10,7 +10,7 @@ use std::{collections::BTreeSet, fmt};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 // A Component is one part of the architecture we're stressing.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Component {
     pub id: String,
     pub name: Option<String>,

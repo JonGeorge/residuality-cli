@@ -258,4 +258,25 @@ mod tests {
             vec![(&matrix.stressors[0], 3)]
         );
     }
+
+    #[test]
+    fn highest_cols_analyzed() {
+        let s1 = stressor("s1", &["c1"]);
+        let s2 = stressor("s2", &["c1"]);
+
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![vec![1, 0, 0], vec![1, 0, 0]],
+            stressors: vec![s1, s2],
+            components: vec![c1, c2, c3],
+        };
+
+        assert_eq!(
+            analyze_highest_col_totals(&matrix),
+            vec![(&matrix.components[0], 2)]
+        );
+    }
 }
