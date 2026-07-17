@@ -26,7 +26,7 @@ impl fmt::Display for Component {
 }
 
 // A Stressor is an environmental pressure on the architecture.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stressor {
     pub id: Option<String>,
 
