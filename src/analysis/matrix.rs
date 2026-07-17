@@ -24,8 +24,21 @@ pub fn generate_incidence_matrix(stressors: Vec<Stressor>, components: Vec<Compo
     }
 }
 
-pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<String> {
-    Vec::new()
+/// Returns all rows whose sum is above the average
+pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<(&Stressor, u32)> {
+    let sums: Vec<u32> = sum_rows(matrix);
+    let average = sums.iter().sum::<u32>() as f32 / sums.len() as f32;
+
+    let mut top_stressors: Vec<(&Stressor, u32)> = matrix
+        .stressors
+        .iter()
+        .zip(sums)
+        .filter(|(_, sum)| *sum as f32 > average)
+        .collect();
+
+    top_stressors.sort_by_cached_key(|s| s.1);
+    top_stressors.reverse();
+    top_stressors
 }
 
 pub fn analyze_highest_col_totals(matrix: &Matrix) -> Vec<String> {

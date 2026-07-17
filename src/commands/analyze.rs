@@ -1,5 +1,6 @@
 use crate::{
-    analysis::matrix::generate_incidence_matrix,
+    analysis::matrix::{analyze_highest_row_totals, generate_incidence_matrix},
+    model::Stressor,
     storage::{COMPONENTS_PATH, STRESSORS_PATH, get_analysis_path_with_date, get_rows},
 };
 
@@ -13,6 +14,8 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let matrix = generate_incidence_matrix(stressors, components);
 
     // Run through all analyses
+    let highest_row_totals: Vec<(&Stressor, u32)> = analyze_highest_row_totals(&matrix);
+
     // Output results to file
     println!("Report has been saved to {}", analysis_path);
     Ok(())
