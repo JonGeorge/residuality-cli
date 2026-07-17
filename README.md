@@ -44,9 +44,7 @@ Safe to re-run — existing files are left untouched.
 ### 1. List the parts of your architecture
  
 ```sh
-residuality component add capture_alpr CaptureALPR
-residuality component add billing_decision BillingDecision
-residuality component add charge_command ChargeCommand
+residuality component add
 ```
  
 ### 2. Stress them — one stressor per residue
