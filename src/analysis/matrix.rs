@@ -42,8 +42,19 @@ pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<(&Stressor, u32)> {
     top_stressors
 }
 
-pub fn analyze_highest_col_totals(matrix: &Matrix) -> Vec<String> {
-    Vec::new()
+pub fn analyze_highest_col_totals(matrix: &Matrix) -> Vec<(&Component, u32)> {
+    let sums = sum_cols(matrix);
+    let average = sums.iter().sum::<u32>() as f32 / sums.len() as f32;
+
+    let mut top_components: Vec<(&Component, u32)> = matrix
+        .components
+        .iter()
+        .zip(sums)
+        .filter(|(_, sum)| *sum as f32 > average)
+        .collect();
+
+    top_components.sort_by_key(|s| Reverse(s.1));
+    top_components
 }
 
 pub fn analyze_coupling(matrix: &Matrix) -> Vec<String> {
