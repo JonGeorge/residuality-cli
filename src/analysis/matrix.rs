@@ -69,8 +69,8 @@ pub fn analyze_unstressed_components(matrix: &Matrix) -> Vec<String> {
     Vec::new()
 }
 
-pub fn get_unstressed_components(matrix: &Matrix) -> Vec<String> {
-    let mut unstressed_component_ids: Vec<String> = Vec::new();
+pub fn get_unstressed_components(matrix: &Matrix) -> Vec<&Component> {
+    let mut unstressed_components: Vec<&Component> = Vec::new();
 
     for c in matrix.components.iter() {
         if !matrix
@@ -78,13 +78,13 @@ pub fn get_unstressed_components(matrix: &Matrix) -> Vec<String> {
             .iter()
             .any(|s| s.affected_components.contains(&c.id))
         {
-            if !unstressed_component_ids.contains(&c.id) {
-                unstressed_component_ids.push(c.id.clone());
+            if !unstressed_components.contains(&c) {
+                unstressed_components.push(c);
             }
         }
     }
 
-    unstressed_component_ids
+    unstressed_components
 }
 
 pub fn sum_cols(matrix: &Matrix) -> Vec<u32> {
@@ -215,7 +215,10 @@ mod tests {
             components: vec![c1, c2, c3],
         };
 
-        assert_eq!(get_unstressed_components(&matrix), vec!["c2"]);
+        assert_eq!(
+            get_unstressed_components(&matrix),
+            vec![&matrix.components[1]]
+        );
     }
 
     #[test]
@@ -233,7 +236,7 @@ mod tests {
             components: vec![c1, c2, c3],
         };
 
-        let result: Vec<String> = Vec::new();
+        let result: Vec<&Component> = Vec::new();
 
         assert_eq!(get_unstressed_components(&matrix), result);
     }
