@@ -65,11 +65,7 @@ pub fn analyze_similar_responses_to_stress(matrix: &Matrix) -> Vec<String> {
     Vec::new()
 }
 
-pub fn analyze_unstressed_components(matrix: &Matrix) -> Vec<String> {
-    Vec::new()
-}
-
-pub fn get_unstressed_components(matrix: &Matrix) -> Vec<&Component> {
+pub fn analyze_unstressed_components(matrix: &Matrix) -> Vec<&Component> {
     let mut unstressed_components: Vec<&Component> = Vec::new();
 
     for c in matrix.components.iter() {
@@ -216,7 +212,7 @@ mod tests {
         };
 
         assert_eq!(
-            get_unstressed_components(&matrix),
+            analyze_unstressed_components(&matrix),
             vec![&matrix.components[1]]
         );
     }
@@ -238,7 +234,7 @@ mod tests {
 
         let result: Vec<&Component> = Vec::new();
 
-        assert_eq!(get_unstressed_components(&matrix), result);
+        assert_eq!(analyze_unstressed_components(&matrix), result);
     }
 
     #[test]
