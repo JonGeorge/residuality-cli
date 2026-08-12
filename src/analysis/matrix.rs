@@ -57,8 +57,38 @@ pub fn analyze_highest_col_totals(matrix: &Matrix) -> Vec<(&Component, u32)> {
     top_components
 }
 
-pub fn analyze_coupling(matrix: &Matrix) -> Vec<String> {
-    Vec::new()
+pub fn analyze_coupling(matrix: &Matrix) -> Vec<(&Component, &Component, u32)> {
+    let mut couplings: Vec<(&Component, &Component, u32)> = Vec::new();
+
+    for i in 0..matrix.components.len() {
+        let mut count = 0;
+        for j in (i + 1)..matrix.components.len() {
+            for row in &matrix.table {
+                if row[i] == 1 && row[j] == 1 {
+                    count += 1;
+                }
+            }
+
+            if count > 0 {
+                couplings.push((&matrix.components[i], &matrix.components[j], count));
+            }
+            count = 0;
+        }
+    }
+
+    let mut sum = 0;
+    for (_, _, count) in couplings.iter() {
+        sum += count;
+    }
+    let average = sum as f32 / couplings.len() as f32;
+
+    couplings = couplings
+        .into_iter()
+        .filter(|(_, _, count)| *count as f32 >= average.floor())
+        .collect();
+
+    couplings.sort_by_key(|s| Reverse(s.2));
+    couplings
 }
 
 pub fn analyze_similar_responses_to_stress(matrix: &Matrix) -> Vec<String> {
@@ -114,6 +144,8 @@ pub fn sum_rows(matrix: &Matrix) -> Vec<u32> {
 #[cfg(test)]
 mod tests {
     use std::vec;
+
+    use crate::views::matrix;
 
     use super::*;
 
@@ -276,6 +308,72 @@ mod tests {
         assert_eq!(
             analyze_highest_col_totals(&matrix),
             vec![(&matrix.components[0], 2)]
+        );
+    }
+
+    #[test]
+    fn coupling_is_analyzed() {
+        let s1 = stressor("s1", &["c1", "c2"]);
+        let s2 = stressor("s2", &["c1", "c2"]);
+        let s3 = stressor("s3", &["c1", "c2"]);
+
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![vec![1, 1, 0], vec![1, 1, 0], vec![1, 1, 0]],
+            stressors: vec![s1, s2, s3],
+            components: vec![c1, c2, c3],
+        };
+
+        assert_eq!(
+            analyze_coupling(&matrix),
+            vec![(&matrix.components[0], &matrix.components[1], 3)]
+        );
+    }
+
+    #[test]
+    fn coupling_is_analyzed_and_sorted() {
+        // Pair counts: (c1,c2)=3, (c2,c3)=4, (c1,c3)=2 → average 3.
+        // The 2 is filtered out; the survivors' sorted order (4 before 3)
+        // is the reverse of loop visit order, so the sort is load-bearing.
+        let s1 = stressor("s1", &["c1", "c2"]);
+        let s2 = stressor("s2", &["c1", "c2"]);
+        let s3 = stressor("s3", &["c1", "c2"]);
+        let s4 = stressor("s4", &["c2", "c3"]);
+        let s5 = stressor("s5", &["c2", "c3"]);
+        let s6 = stressor("s6", &["c2", "c3"]);
+        let s7 = stressor("s7", &["c2", "c3"]);
+        let s8 = stressor("s8", &["c1", "c3"]);
+        let s9 = stressor("s9", &["c1", "c3"]);
+
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![
+                vec![1, 1, 0],
+                vec![1, 1, 0],
+                vec![1, 1, 0],
+                vec![0, 1, 1],
+                vec![0, 1, 1],
+                vec![0, 1, 1],
+                vec![0, 1, 1],
+                vec![1, 0, 1],
+                vec![1, 0, 1],
+            ],
+            stressors: vec![s1, s2, s3, s4, s5, s6, s7, s8, s9],
+            components: vec![c1, c2, c3],
+        };
+
+        assert_eq!(
+            analyze_coupling(&matrix),
+            vec![
+                (&matrix.components[1], &matrix.components[2], 4),
+                (&matrix.components[0], &matrix.components[1], 3)
+            ]
         );
     }
 }
