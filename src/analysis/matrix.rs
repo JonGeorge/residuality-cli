@@ -91,8 +91,50 @@ pub fn analyze_coupling(matrix: &Matrix) -> Vec<(&Component, &Component, u32)> {
     couplings
 }
 
-pub fn analyze_similar_responses_to_stress(matrix: &Matrix) -> Vec<String> {
-    Vec::new()
+pub fn analyze_similar_responses_to_stress(matrix: &Matrix) -> Vec<Vec<&Component>> {
+    let mut similar_stressed_components: Vec<Vec<&Component>> = Vec::new();
+    let mut components_stressed_by_no_stressors = Vec::new();
+
+    // Check for components stressed by every stressor or no stressors
+    for (i, c) in matrix.components.iter().enumerate() {
+        // Check if all rows have 0 in i column
+        if matrix.table.iter().all(|row| row[i] == 0) {
+            components_stressed_by_no_stressors.push(c);
+        }
+    }
+
+    for (i, c) in matrix.components.iter().enumerate() {
+        // Skip if the component is all 0's
+        if components_stressed_by_no_stressors.contains(&c) {
+            continue;
+        }
+
+        // Skip if the component is already in a cluster
+        if similar_stressed_components
+            .iter()
+            .any(|cluster| cluster.contains(&c))
+        {
+            continue;
+        }
+
+        let mut cluster = Vec::new();
+
+        for j in i + 1..matrix.components.len() {
+            // If all rows for columns i and j are equal, then add both to the cluster
+            if matrix.table.iter().all(|r| r[i] == r[j]) {
+                // If this is the first time we add to a cluster, add both components that we compared
+                if cluster.is_empty() {
+                    cluster.push(c);
+                }
+                cluster.push(&matrix.components[j]);
+            }
+        }
+
+        if !cluster.is_empty() {
+            similar_stressed_components.push(cluster);
+        }
+    }
+    similar_stressed_components
 }
 
 pub fn analyze_unstressed_components(matrix: &Matrix) -> Vec<&Component> {
@@ -143,11 +185,8 @@ pub fn sum_rows(matrix: &Matrix) -> Vec<u32> {
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
-
-    use crate::views::matrix;
-
     use super::*;
+    use std::vec;
 
     // Tiny builders so each test isn't buried in empty-string fields.
     fn component(id: &str) -> Component {
@@ -374,6 +413,66 @@ mod tests {
                 (&matrix.components[1], &matrix.components[2], 4),
                 (&matrix.components[0], &matrix.components[1], 3)
             ]
+        );
+    }
+
+    #[test]
+    fn similar_components_are_identified() {
+        let s1 = stressor("s1", &["c1", "c2"]);
+        let s2 = stressor("s2", &["c1", "c2"]);
+
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![vec![1, 1, 0], vec![1, 1, 0]],
+            stressors: vec![s1, s2],
+            components: vec![c1, c2, c3],
+        };
+
+        assert_eq!(
+            analyze_similar_responses_to_stress(&matrix),
+            vec![vec![&matrix.components[0], &matrix.components[1]]]
+        );
+    }
+
+    #[test]
+    fn similar_components_empty_are_identified() {
+        let s1 = stressor("s1", &["c1"]);
+        let s2 = stressor("s2", &["c1"]);
+
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![vec![1, 0, 0], vec![1, 0, 0]],
+            stressors: vec![s1, s2],
+            components: vec![c1, c2, c3],
+        };
+
+        assert_eq!(
+            analyze_similar_responses_to_stress(&matrix),
+            Vec::<Vec<&Component>>::new()
+        );
+    }
+
+    #[test]
+    fn similar_components_no_stressors_are_identified() {
+        let c1 = component("c1");
+        let c2 = component("c2");
+        let c3 = component("c3");
+
+        let matrix = Matrix {
+            table: vec![],
+            stressors: vec![],
+            components: vec![c1, c2, c3],
+        };
+
+        assert_eq!(
+            analyze_similar_responses_to_stress(&matrix),
+            Vec::<Vec<&Component>>::new()
         );
     }
 }
