@@ -29,8 +29,8 @@ Stressors have **no probability or cost fields** (you stress the architecture fi
 
 ## Usage
  
-Three steps, in the order you'd actually work:
-**add components → add stressors → analyze the matrix.**
+Four steps, in the order you'd actually work:
+**add components → add stressors → view the matrix → analyze it.**
 
 ### 0. Set up the CSV files
 
@@ -56,7 +56,7 @@ reaction, technical change, then pick which components are affected):
 residuality stressor add
 ```
  
-### 3. Analyze the relationships
+### 3. View the matrix
 
 Export your matrix to CSV
 ```sh
@@ -78,7 +78,54 @@ New car model       ·               ·                ●          1
 Σ                   1               1                2
 ```
 
-### 4. Interpret findings
+### 4. Analyze the matrix
+
+```sh
+residuality analyze
+```
+
+Reads the same CSV files, derives the incidence matrix, and prints a summary of what the numbers
+are telling you. For the small matrix above:
+
+```
+2 stressors × 3 components - 4 links, density = 0.667
+
+Most impactful stressors    (avg 2.00)
+3     Failed login
+
+Most stressed components    (avg 1.33)
+2     charge_command
+
+Hidden coupling
+1     capture_alpr ↔ billing_decision
+1     capture_alpr ↔ charge_command
+1     billing_decision ↔ charge_command
+
+Merge candidates
+2     capture_alpr, billing_decision
+
+Untouched components
+None
+```
+
+What each section means:
+
+- **Header** — matrix size, total number of stressor→component links, and density (links divided
+  by cells). High density hints that the problem is the decomposition itself, not any one component.
+- **Most impactful stressors** — stressors whose row total is above the average, i.e. the ones
+  that ripple across the most components.
+- **Most stressed components** — components whose column total is above the average, i.e. the
+  parts most sensitive to stress.
+- **Hidden coupling** — pairs of components that are hit by the same stressors (at or above the
+  average shared-stressor count), meaning they fail together even if no code connects them.
+- **Merge candidates** — components with *identical* columns: they respond to stress as one unit,
+  so consider merging them or extracting the shared component hiding in both.
+- **Untouched components** — components no stressor affects; almost certainly under-stressed
+  rather than invulnerable.
+
+### 5. Interpret findings
+
+The `analyze` command surfaces most of these automatically, but the judgment calls are yours:
 **High row totals** - shows unnecessary boundary separations, consider less granular components (increase coupling)
 
 **High column totals** - shows components that are sensitive to stress, consider more granular components (decrease coupling)
