@@ -17,3 +17,5 @@ error,Error Handling & Result Propagation
 fs_paths,Filesystem Path Resolution (architecture/ & reports/)
 config,Configuration & Working Directory Resolution
 stdout,Stdout Output Formatting
+test_comp,TESET
+test_comp2,TESET

@@ -1,11 +1,13 @@
 id,name,detection,attractor,business_reaction,technical_change,affected_components
+test1,TEST,eee,eee,eee,eee,test_comp;test_comp2
+test2,TEST2,eee,eee,eee,eee,test_comp;test_comp2
 malformed_csv,Malformed CSV row,csv::Error on deserialize,strict schema validation,user loses trust in tool output,validate headers and surface row number,storage;deserializer
 dirty_affects_cell,Affects cell with stray spaces or empty ids,phantom or missing matrix cells,trim and filter on parse,silent wrong analysis,normalize ids in deserialize_affects,deserializer;matrix
 missing_components_file,Components file missing or wrong path,from_path returns io::Error,clear "run init first" message,user blocked at startup,propagate Result and hint remedy,storage;cli
 renamed_component_id,Component id renamed but stressors not updated,stressor references unknown id,referential integrity check,stale matrix shows false zeros,validate affects against component ids,model;matrix
 large_architecture,Large architecture (hundreds of components),wide unreadable matrix output,stream rows / paginate,report becomes unusable,write reports/matrix.csv instead of stdout,matrix;report
 non_utf8_export,Non-UTF8 or Excel-encoded export,parse failure on odd bytes,document expected encoding,import breaks from Excel round-trip,handle BOM/encoding in reader,storage
-schema_drift,Schema drift (new Stressor field added),deserialize count/column mismatch,version the CSV schema,old files fail to load,additive fields with serde defaults,model;storage;deserializer
+schema_drift,Schema drift (new Stressor field added),deserialize count/column mismatch,version the CSV schema,old files fail to load,additive fields with serde defaults,model;storage;deserializer;cli
 concurrent_writes,Two processes append to stressors.csv at once,interleaved or truncated rows on next read,serialize writes behind a file lock,corrupted data scares users off,write to temp file then atomic rename,storage;stressor_cmd
 disk_full,Disk fills during a write,short write or ENOSPC io::Error,atomic temp-then-rename so original survives,half-written report mistaken as real,check every write result before replacing,storage;serializer;report
 readonly_filesystem,architecture dir on a read-only mount,permission error on save,detect read-only mount up front,user cannot record any findings,surface a clear read-only hint,storage;fs_paths;error
