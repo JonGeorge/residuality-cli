@@ -82,10 +82,7 @@ pub fn analyze_coupling(matrix: &Matrix) -> Vec<(&Component, &Component, u32)> {
     }
     let average = sum as f32 / couplings.len() as f32;
 
-    couplings = couplings
-        .into_iter()
-        .filter(|(_, _, count)| *count as f32 >= average.floor())
-        .collect();
+    couplings.retain(|(_, _, count)| *count as f32 >= average.floor());
 
     couplings.sort_by_key(|s| Reverse(s.2));
     couplings
@@ -145,10 +142,9 @@ pub fn analyze_unstressed_components(matrix: &Matrix) -> Vec<&Component> {
             .stressors
             .iter()
             .any(|s| s.affected_components.contains(&c.id))
+            && !unstressed_components.contains(&c)
         {
-            if !unstressed_components.contains(&c) {
-                unstressed_components.push(c);
-            }
+            unstressed_components.push(c);
         }
     }
 

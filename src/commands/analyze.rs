@@ -4,7 +4,7 @@ use crate::{
         analyze_identical_responses_to_stress, analyze_unstressed_components,
         generate_incidence_matrix, sum_cols, sum_rows,
     },
-    storage::{COMPONENTS_PATH, STRESSORS_PATH, get_analysis_path_with_date, get_rows},
+    storage::{COMPONENTS_PATH, STRESSORS_PATH, get_rows},
 };
 /*
 9 stressors × 5 components — 21 links, density 0.47
@@ -64,54 +64,84 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!(", density = {:.3}", density);
     println!();
 
-    let row_average = if row_sums.len() == 0 {0.0} else {row_sums.iter().sum::<u32>() as f32 / row_sums.len() as f32};
+    let row_average = if row_sums.is_empty() {
+        0.0
+    } else {
+        row_sums.iter().sum::<u32>() as f32 / row_sums.len() as f32
+    };
     println!("Most impactful stressors\t(avg {:.2})", row_average);
-    println!();
 
     let highest_row_totals = analyze_highest_row_totals(&matrix);
-    for (s, count) in highest_row_totals {
-        println!("{}     {}", count, s.id.as_deref().unwrap_or(""));
+    if highest_row_totals.is_empty() {
+        println!("None");
+    } else {
+        for (s, count) in highest_row_totals {
+            println!(
+                "{}     {}",
+                count,
+                s.id.as_deref().unwrap_or("<Missing ID>")
+            );
+        }
     }
     println!();
 
     let col_sums = sum_cols(&matrix);
-    let col_average = if col_sums.len() == 0 {0.0} else {col_sums.iter().sum::<u32>() as f32 / col_sums.len() as f32};
+    let col_average = if col_sums.is_empty() {
+        0.0
+    } else {
+        col_sums.iter().sum::<u32>() as f32 / col_sums.len() as f32
+    };
     println!("Most stressed components\t(avg {:.2})", col_average);
-    println!();
 
     let highest_col_totals = analyze_highest_col_totals(&matrix);
-    for (c, count) in highest_col_totals {
-        println!("{}     {}", count, c.id);
+    if highest_col_totals.is_empty() {
+        println!("None");
+    } else {
+        for (c, count) in highest_col_totals {
+            println!("{}     {}", count, c);
+        }
     }
     println!();
 
     println!("Hidden coupling");
     let couplings = analyze_coupling(&matrix);
-    for (c1, c2, coupling_count) in couplings {
-        println!("{}     {} ↔ {}", coupling_count, c1, c2);
+    if couplings.is_empty() {
+        println!("None");
+    } else {
+        for (c1, c2, coupling_count) in couplings {
+            println!("{}     {} ↔ {}", coupling_count, c1, c2);
+        }
     }
     println!();
 
     println!("Merge candidates");
     let identical_components = analyze_identical_responses_to_stress(&matrix);
-    for cluster in identical_components.iter() {
-        print!(
-            "{}     {} ",
-            cluster.len(),
-            cluster
-                .iter()
-                .map(|component| component.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
-        );
-        println!();
+    if identical_components.is_empty() {
+        println!("None");
+    } else {
+        for cluster in identical_components.iter() {
+            print!(
+                "{}     {} ",
+                cluster.len(),
+                cluster
+                    .iter()
+                    .map(|component| component.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            );
+            println!();
+        }
     }
     println!();
 
     println!("Untouched components");
     let unstressed_components = analyze_unstressed_components(&matrix);
-    for c in unstressed_components {
-        println!("{c}");
+    if unstressed_components.is_empty() {
+        println!("None");
+    } else {
+        for c in unstressed_components {
+            println!("{c}");
+        }
     }
     println!();
 
