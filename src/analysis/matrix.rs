@@ -91,7 +91,7 @@ pub fn analyze_coupling(matrix: &Matrix) -> Vec<(&Component, &Component, u32)> {
     couplings
 }
 
-pub fn analyze_similar_responses_to_stress(matrix: &Matrix) -> Vec<Vec<&Component>> {
+pub fn analyze_identical_responses_to_stress(matrix: &Matrix) -> Vec<Vec<&Component>> {
     let mut similar_stressed_components: Vec<Vec<&Component>> = Vec::new();
     let mut components_stressed_by_no_stressors = Vec::new();
 
@@ -208,271 +208,223 @@ mod tests {
         }
     }
 
-    #[test]
-    fn marks_each_affected_component_with_1() {
-        // Arrange: three components, one stressor that hits the 1st and 3rd.
-        let components = vec![component("a"), component("b"), component("c")];
-        let stressors = vec![stressor("s1", &["a", "c"])];
+    mod generate_matrix {
+        use super::*;
 
-        // Act
-        let matrix = generate_incidence_matrix(stressors, components);
+        #[test]
+        fn marks_affected_components_with_1() {
+            // Arrange: three components, one stressor that hits the 1st and 3rd.
+            let components = vec![component("a"), component("b"), component("c")];
+            let stressors = vec![stressor("s1", &["a", "c"])];
 
-        // Assert: one row (one stressor); 1 for a and c, 0 for b.
-        assert_eq!(matrix.table, vec![vec![1, 0, 1]]);
+            // Act
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            // Assert: one row (one stressor); 1 for a and c, 0 for b.
+            assert_eq!(matrix.table, vec![vec![1, 0, 1]]);
+        }
+
+        #[test]
+        fn stressor_affecting_nothing_yields_all_zero_row() {
+            let components = vec![component("a"), component("b")];
+            let stressors = vec![stressor("s1", &[])]; // affects no components
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            assert_eq!(matrix.table, vec![vec![0, 0]]);
+        }
+
+        #[test]
+        fn no_stressors_yields_empty_table() {
+            let components = vec![component("a"), component("b")];
+            let stressors = vec![];
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            assert_eq!(matrix.table, Vec::<Vec<u32>>::new());
+        }
     }
 
-    #[test]
-    fn stressor_affecting_nothing_is_all_zeros() {
-        let components = vec![component("a"), component("b")];
-        let stressors = vec![stressor("s1", &[])]; // affects no components
+    mod sums {
+        use super::*;
 
-        let matrix = generate_incidence_matrix(stressors, components);
+        #[test]
+        fn col_sum_counts_stressors_hitting_a_component() {
+            let stressors = vec![stressor("s1", &["c3"]), stressor("s2", &["c1", "c3"])];
 
-        assert_eq!(matrix.table, vec![vec![0, 0]]);
+            let components = vec![component("c1"), component("c2"), component("c3")];
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            assert_eq!(sum_cols(&matrix), vec![1, 0, 2]);
+        }
+
+        #[test]
+        fn row_sum_counts_components_a_stressor_hits() {
+            let stressors = vec![
+                stressor("s1", &["c1", "c3"]),
+                stressor("s2", &["c1", "c2", "c3"]),
+            ];
+            let components = vec![component("c1"), component("c2"), component("c3")];
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            assert_eq!(sum_rows(&matrix), vec![2, 3]);
+        }
     }
 
-    #[test]
-    fn sum_matrix_cols_correctly() {
-        let s1 = stressor("s1", &["a", "c"]);
-        let s2 = stressor("s2", &["a", "c"]);
+    mod unstressed {
+        use super::*;
 
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
+        #[test]
+        fn reports_components_no_stressor_touches() {
+            let stressors = vec![stressor("s1", &["c3"]), stressor("s2", &["c1"])];
+            let components = vec![component("c1"), component("c2"), component("c3")];
 
-        let matrix = Matrix {
-            table: vec![vec![1, 0, 1], vec![0, 0, 1]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
+            let matrix = generate_incidence_matrix(stressors, components);
 
-        assert_eq!(sum_cols(&matrix), vec![1, 0, 2]);
+            assert_eq!(
+                analyze_unstressed_components(&matrix),
+                vec![&matrix.components[1]]
+            );
+        }
+
+        #[test]
+        fn reports_nothing_when_every_component_is_stressed() {
+            let stressors = vec![stressor("s2", &["c1", "c"]), stressor("s1", &["c2", "c3"])];
+
+            let components = vec![component("c1"), component("c2"), component("c3")];
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            let result: Vec<&Component> = Vec::new();
+
+            assert_eq!(analyze_unstressed_components(&matrix), result);
+        }
     }
 
-    #[test]
-    fn sum_matrix_rows_correctly() {
-        let s1 = stressor("s1", &["a", "c"]);
-        let s2 = stressor("s2", &["a", "c"]);
+    mod highest_totals {
+        use super::*;
 
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
+        #[test]
+        fn only_above_average_stressors_reported() {
+            let stressors = vec![stressor("s1", &["c2", "c3", "c1"]), stressor("s2", &[])];
+            let components = vec![component("c1"), component("c2"), component("c3")];
 
-        let matrix = Matrix {
-            table: vec![vec![1, 0, 1], vec![1, 1, 1]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
+            let matrix = generate_incidence_matrix(stressors, components);
 
-        assert_eq!(sum_rows(&matrix), vec![2, 3]);
+            assert_eq!(
+                analyze_highest_row_totals(&matrix),
+                vec![(&matrix.stressors[0], 3)]
+            );
+        }
+
+        #[test]
+        fn only_above_average_components_reported() {
+            let stressors = vec![stressor("s1", &["c1"]), stressor("s2", &["c1"])];
+
+            let components = vec![component("c1"), component("c2"), component("c3")];
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            assert_eq!(
+                analyze_highest_col_totals(&matrix),
+                vec![(&matrix.components[0], 2)]
+            );
+        }
     }
 
-    #[test]
-    fn unstressed_components_identified() {
-        let s1 = stressor("s1", &["a", "c3"]);
-        let s2 = stressor("s2", &["c1", "c"]);
+    mod coupling {
+        use super::*;
 
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
+        #[test]
+        fn reports_shared_stressor_count_per_pair() {
+            let stressors = vec![
+                stressor("s1", &["c1", "c2"]),
+                stressor("s2", &["c1", "c2"]),
+                stressor("s3", &["c1", "c2"]),
+            ];
+            let components = vec![component("c1"), component("c2"), component("c3")];
 
-        let matrix = Matrix {
-            table: vec![vec![1, 0, 1], vec![1, 1, 1]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
+            let matrix = generate_incidence_matrix(stressors, components);
 
-        assert_eq!(
-            analyze_unstressed_components(&matrix),
-            vec![&matrix.components[1]]
-        );
+            assert_eq!(
+                analyze_coupling(&matrix),
+                vec![(&matrix.components[0], &matrix.components[1], 3)]
+            );
+        }
+
+        #[test]
+        fn ranks_strongest_first_and_drops_below_average() {
+            // Pair counts: (c1,c2)=3, (c2,c3)=4, (c1,c3)=2 → average 3.
+            // The 2 is filtered out; the survivors' sorted order (4 before 3)
+            // is the reverse of loop visit order, so the sort is load-bearing.
+
+            let components = vec![component("c1"), component("c2"), component("c3")];
+            let stressors = vec![
+                stressor("s1", &["c1", "c2"]),
+                stressor("s2", &["c1", "c2"]),
+                stressor("s3", &["c1", "c2"]),
+                stressor("s4", &["c2", "c3"]),
+                stressor("s5", &["c2", "c3"]),
+                stressor("s6", &["c2", "c3"]),
+                stressor("s7", &["c2", "c3"]),
+                stressor("s8", &["c1", "c3"]),
+                stressor("s9", &["c1", "c3"]),
+            ];
+
+            let matrix = generate_incidence_matrix(stressors, components);
+
+            assert_eq!(
+                analyze_coupling(&matrix),
+                vec![
+                    (&matrix.components[1], &matrix.components[2], 4),
+                    (&matrix.components[0], &matrix.components[1], 3)
+                ]
+            );
+        }
     }
 
-    #[test]
-    fn no_unstressed_components_identified() {
-        let s1 = stressor("s1", &["c2", "c3"]);
-        let s2 = stressor("s2", &["c1", "c"]);
+    mod identical_responses_to_stress {
+        use super::*;
 
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
+        #[test]
+        fn clusters_components_with_identical_columns() {
+            let stressors = vec![stressor("s1", &["c1", "c2"]), stressor("s2", &["c1", "c2"])];
+            let components = vec![component("c1"), component("c2"), component("c3")];
 
-        let matrix = Matrix {
-            table: vec![vec![1, 0, 1], vec![1, 1, 1]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
+            let matrix = generate_incidence_matrix(stressors, components);
 
-        let result: Vec<&Component> = Vec::new();
+            assert_eq!(
+                analyze_identical_responses_to_stress(&matrix),
+                vec![vec![&matrix.components[0], &matrix.components[1]]]
+            );
+        }
 
-        assert_eq!(analyze_unstressed_components(&matrix), result);
-    }
+        #[test]
+        fn all_zero_columns_do_not_form_a_cluster() {
+            let components = vec![component("c1"), component("c2"), component("c3")];
+            let stressors = vec![stressor("s1", &["c1"]), stressor("s2", &["c1"])];
 
-    #[test]
-    fn highest_rows_analyzed() {
-        let s1 = stressor("s1", &["c2", "c3", "c1"]);
-        let s2 = stressor("s2", &[""]);
+            let matrix = generate_incidence_matrix(stressors, components);
 
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
+            assert_eq!(
+                analyze_identical_responses_to_stress(&matrix),
+                Vec::<Vec<&Component>>::new()
+            );
+        }
 
-        let matrix = Matrix {
-            table: vec![vec![1, 1, 1], vec![0, 0, 0]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
+        #[test]
+        fn no_stressors_means_no_clusters() {
+            let components = vec![component("c1"), component("c2"), component("c3")];
+            let stressors = vec![];
 
-        assert_eq!(
-            analyze_highest_row_totals(&matrix),
-            vec![(&matrix.stressors[0], 3)]
-        );
-    }
+            let matrix = generate_incidence_matrix(stressors, components);
 
-    #[test]
-    fn highest_cols_analyzed() {
-        let s1 = stressor("s1", &["c1"]);
-        let s2 = stressor("s2", &["c1"]);
-
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
-
-        let matrix = Matrix {
-            table: vec![vec![1, 0, 0], vec![1, 0, 0]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
-
-        assert_eq!(
-            analyze_highest_col_totals(&matrix),
-            vec![(&matrix.components[0], 2)]
-        );
-    }
-
-    #[test]
-    fn coupling_is_analyzed() {
-        let s1 = stressor("s1", &["c1", "c2"]);
-        let s2 = stressor("s2", &["c1", "c2"]);
-        let s3 = stressor("s3", &["c1", "c2"]);
-
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
-
-        let matrix = Matrix {
-            table: vec![vec![1, 1, 0], vec![1, 1, 0], vec![1, 1, 0]],
-            stressors: vec![s1, s2, s3],
-            components: vec![c1, c2, c3],
-        };
-
-        assert_eq!(
-            analyze_coupling(&matrix),
-            vec![(&matrix.components[0], &matrix.components[1], 3)]
-        );
-    }
-
-    #[test]
-    fn coupling_is_analyzed_and_sorted() {
-        // Pair counts: (c1,c2)=3, (c2,c3)=4, (c1,c3)=2 → average 3.
-        // The 2 is filtered out; the survivors' sorted order (4 before 3)
-        // is the reverse of loop visit order, so the sort is load-bearing.
-        let s1 = stressor("s1", &["c1", "c2"]);
-        let s2 = stressor("s2", &["c1", "c2"]);
-        let s3 = stressor("s3", &["c1", "c2"]);
-        let s4 = stressor("s4", &["c2", "c3"]);
-        let s5 = stressor("s5", &["c2", "c3"]);
-        let s6 = stressor("s6", &["c2", "c3"]);
-        let s7 = stressor("s7", &["c2", "c3"]);
-        let s8 = stressor("s8", &["c1", "c3"]);
-        let s9 = stressor("s9", &["c1", "c3"]);
-
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
-
-        let matrix = Matrix {
-            table: vec![
-                vec![1, 1, 0],
-                vec![1, 1, 0],
-                vec![1, 1, 0],
-                vec![0, 1, 1],
-                vec![0, 1, 1],
-                vec![0, 1, 1],
-                vec![0, 1, 1],
-                vec![1, 0, 1],
-                vec![1, 0, 1],
-            ],
-            stressors: vec![s1, s2, s3, s4, s5, s6, s7, s8, s9],
-            components: vec![c1, c2, c3],
-        };
-
-        assert_eq!(
-            analyze_coupling(&matrix),
-            vec![
-                (&matrix.components[1], &matrix.components[2], 4),
-                (&matrix.components[0], &matrix.components[1], 3)
-            ]
-        );
-    }
-
-    #[test]
-    fn similar_components_are_identified() {
-        let s1 = stressor("s1", &["c1", "c2"]);
-        let s2 = stressor("s2", &["c1", "c2"]);
-
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
-
-        let matrix = Matrix {
-            table: vec![vec![1, 1, 0], vec![1, 1, 0]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
-
-        assert_eq!(
-            analyze_similar_responses_to_stress(&matrix),
-            vec![vec![&matrix.components[0], &matrix.components[1]]]
-        );
-    }
-
-    #[test]
-    fn similar_components_empty_are_identified() {
-        let s1 = stressor("s1", &["c1"]);
-        let s2 = stressor("s2", &["c1"]);
-
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
-
-        let matrix = Matrix {
-            table: vec![vec![1, 0, 0], vec![1, 0, 0]],
-            stressors: vec![s1, s2],
-            components: vec![c1, c2, c3],
-        };
-
-        assert_eq!(
-            analyze_similar_responses_to_stress(&matrix),
-            Vec::<Vec<&Component>>::new()
-        );
-    }
-
-    #[test]
-    fn similar_components_no_stressors_are_identified() {
-        let c1 = component("c1");
-        let c2 = component("c2");
-        let c3 = component("c3");
-
-        let matrix = Matrix {
-            table: vec![],
-            stressors: vec![],
-            components: vec![c1, c2, c3],
-        };
-
-        assert_eq!(
-            analyze_similar_responses_to_stress(&matrix),
-            Vec::<Vec<&Component>>::new()
-        );
+            assert_eq!(
+                analyze_identical_responses_to_stress(&matrix),
+                Vec::<Vec<&Component>>::new()
+            );
+        }
     }
 }
