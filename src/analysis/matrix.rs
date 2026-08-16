@@ -29,7 +29,11 @@ pub fn generate_incidence_matrix(stressors: Vec<Stressor>, components: Vec<Compo
 /// Returns all rows whose sum is above the average
 pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<(&Stressor, u32)> {
     let sums: Vec<u32> = sum_rows(matrix);
-    let average = sums.iter().sum::<u32>() as f32 / sums.len() as f32;
+    let average = if sums.is_empty() {
+        0.0
+    } else {
+        sums.iter().sum::<u32>() as f32 / sums.len() as f32
+    };
 
     let mut top_stressors: Vec<(&Stressor, u32)> = matrix
         .stressors
@@ -44,7 +48,11 @@ pub fn analyze_highest_row_totals(matrix: &Matrix) -> Vec<(&Stressor, u32)> {
 
 pub fn analyze_highest_col_totals(matrix: &Matrix) -> Vec<(&Component, u32)> {
     let sums = sum_cols(matrix);
-    let average = sums.iter().sum::<u32>() as f32 / sums.len() as f32;
+    let average = if sums.is_empty() {
+        0.0
+    } else {
+        sums.iter().sum::<u32>() as f32 / sums.len() as f32
+    };
 
     let mut top_components: Vec<(&Component, u32)> = matrix
         .components
@@ -80,7 +88,11 @@ pub fn analyze_coupling(matrix: &Matrix) -> Vec<(&Component, &Component, u32)> {
     for (_, _, count) in couplings.iter() {
         sum += count;
     }
-    let average = sum as f32 / couplings.len() as f32;
+    let average = if couplings.is_empty() {
+        0.0
+    } else {
+        sum as f32 / couplings.len() as f32
+    };
 
     couplings.retain(|(_, _, count)| *count as f32 >= average.floor());
 
