@@ -6,31 +6,8 @@ use crate::{
     },
     storage::{COMPONENTS_PATH, STRESSORS_PATH, get_rows},
 };
-/*
-9 stressors × 5 components — 21 links, density 0.47
 
-Most-stressed stressors            (avg 2.3)
-  4  Server failure
-  3  New car model
-
-Most-sensitive components          (avg 4.2)
-  6  StopChargeCommand
-  5  ChargeCommand
-
-Hidden coupling — functionally linked?
-  4  StopChargeCommand ↔ UnlockCar
-  3  CaptureALPR ↔ BillingDecision
-
-Merge candidates — identical response to stress
-  ChargeCommand, StopChargeCommand
-
-Untouched components — probably under-stressed
-  CustomerLogin
-
-Trigger 6 (stressor combinations) is not automated — see reports/triggers.md
-*/
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    // Get matrix struct
     let stressors = get_rows(STRESSORS_PATH)?;
     let components = get_rows(COMPONENTS_PATH)?;
     let matrix = generate_incidence_matrix(stressors, components);
@@ -53,7 +30,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     let row_sums = sum_rows(&matrix);
     let sum = row_sums.iter().sum::<u32>();
-    print!(" {} links", sum);
+    print!(" - {} links", sum);
 
     let cells = matrix.components.len() * matrix.stressors.len();
     let density = if cells == 0 {
@@ -77,9 +54,9 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         for (s, count) in highest_row_totals {
             println!(
-                "{}     {}",
+                "{:<6}{}",
                 count,
-                s.id.as_deref().unwrap_or("<Missing ID>")
+                s.name.as_deref().unwrap_or("<Missing stressor name>")
             );
         }
     }
@@ -98,7 +75,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         println!("None");
     } else {
         for (c, count) in highest_col_totals {
-            println!("{}     {}", count, c);
+            println!("{:<6}{}", count, c);
         }
     }
     println!();
@@ -109,7 +86,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         println!("None");
     } else {
         for (c1, c2, coupling_count) in couplings {
-            println!("{}     {} ↔ {}", coupling_count, c1, c2);
+            println!("{:<6}{} ↔ {}", coupling_count, c1, c2);
         }
     }
     println!();
@@ -121,7 +98,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         for cluster in identical_components.iter() {
             println!(
-                "{}     {} ",
+                "{:<6}{}",
                 cluster.len(),
                 cluster
                     .iter()
