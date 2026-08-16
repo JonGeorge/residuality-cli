@@ -120,7 +120,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         println!("None");
     } else {
         for cluster in identical_components.iter() {
-            print!(
+            println!(
                 "{}     {} ",
                 cluster.len(),
                 cluster
@@ -129,7 +129,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     .collect::<Vec<String>>()
                     .join(", ")
             );
-            println!();
         }
     }
     println!();
