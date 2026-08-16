@@ -67,7 +67,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let row_average = if row_sums.is_empty() {
         0.0
     } else {
-        row_sums.iter().sum::<u32>() as f32 / row_sums.len() as f32
+        sum as f32 / row_sums.len() as f32
     };
     println!("Most impactful stressors\t(avg {:.2})", row_average);
 
