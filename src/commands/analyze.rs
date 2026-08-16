@@ -75,7 +75,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let col_sums = sum_cols(&matrix);
-    let col_average = col_sums.iter().sum::<u32>() as f32 / col_sums.len() as f32;
+    let col_average = if col_sums.len() == 0 {0.0} else {col_sums.iter().sum::<u32>() as f32 / col_sums.len() as f32};
     println!("Most stressed components\t(avg {:.2})", col_average);
     println!();
 
