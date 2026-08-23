@@ -120,9 +120,9 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
         combination_rate
     );
     println!();
-    println!("Highest leverage");
+    println!("Highest leverage residues");
     for residue in leverage.iter().take(3) {
-        println!("{:<6}{}", residue.1, residue.0);
+        println!("{:<6}{}", residue.0, residue.1);
     }
     if !orphans.is_empty() {
         println!();

@@ -29,11 +29,28 @@ Each stressor records how you'd *detect* it, the *attractor* it pulls the system
 
 Stressors have **no probability or cost fields** (you stress the architecture first and worry about likelihood later). There is no stressor template library — stressors are specific to your system.
 
+## Install
+
+```sh
+cargo install residuality
+```
+
+Or build from source with a recent stable [Rust toolchain](https://rustup.rs):
+
+```sh
+git clone https://github.com/JonGeorge/residuality-cli
+cd residuality-cli
+cargo install --path .
+```
+
+Either way you get two equivalent binaries: `residuality`, and `res` as a short alias for daily
+use — every command below also works as `res init`, `res analyze`, and so on.
+
 ## Usage
  
-Five steps, in the order you'd actually work:
-**add components → add stressors → view the matrix → analyze it → test the design against fresh
-stressors.**
+Six steps, in the order you'd actually work:
+**add components → add stressors → check the files → view the matrix → analyze it → test the
+design against fresh stressors.**
 
 ### 0. Set up the CSV files
 
@@ -58,8 +75,22 @@ reaction, technical change, then pick which components are affected):
 ```sh
 residuality stressor add
 ```
- 
-### 3. View the matrix
+
+### 3. Check the files
+
+The CSVs are meant to be hand-edited in a spreadsheet, so mistakes will creep in — `check` audits
+both files and reports what it finds: unreadable files, missing, duplicate, or invalid component
+ids, and `affects` cells that reference components that don't exist.
+
+```sh
+residuality check
+```
+
+Prints `Everything looks good!` when the files are clean; otherwise it lists each finding with its
+file and row number and exits non-zero, so it also works as a CI step or pre-commit hook. Run it
+whenever the files have been edited outside the tool.
+
+### 4. View the matrix
 
 Export your matrix to CSV
 ```sh
@@ -81,7 +112,7 @@ New car model       ·               ·                ●          1
 Σ                   1               1                2
 ```
 
-### 4. Analyze the matrix
+### 5. Analyze the matrix
 
 ```sh
 residuality analyze
@@ -128,7 +159,7 @@ What each section means:
 - **Untouched components** — components no stressor affects; almost certainly under-stressed
   rather than invulnerable.
 
-### 5. Interpret findings
+### 6. Interpret findings
 
 The `analyze` command surfaces most of these automatically, but the judgment calls are yours:
 **High row totals** - shows unnecessary boundary separations, consider less granular components (increase coupling)
@@ -145,7 +176,7 @@ The `analyze` command surfaces most of these automatically, but the judgment cal
 
 **Columns that sum to zero** - shows components that appear invulnerable but are almost certainly just under-stressed; consider generating more stressors aimed at that part of the system before trusting the matrix
 
-### 6. Test the design empirically
+### 7. Test the design empirically
 
 The last step of the method is an evidence check: bombard the finished design with stressors it has
 **never seen**. Brainstorm a fresh batch — don't reuse the ones that shaped the design — and record
@@ -173,9 +204,9 @@ Residual index = 0.700
 Criticality score = 0.850
 Rate of multiple residues covering a single test = 0.400
 
-Highest leverage
-5     S3
-2     S1
+Highest leverage residues
+S3    5
+S1    2
 
 Residues with no impact
 S9
