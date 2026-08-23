@@ -33,6 +33,7 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut naive_survival_count = 0;
     let mut residue_survival_count = 0;
+    let mut multi_residue_survival_count = 0;
     let mut residue_cite_count: BTreeMap<&str, i32> = BTreeMap::new();
 
     let mut failed_covered_by_references = false;
@@ -65,7 +66,7 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
 
         /*
          * Test metrics
-         * combination_rate = (residual survivals citing >= 2 residues) / Y
+         * combination_rate = (residual survivals with more than one covered_by) / Y
          * leverage[r] = how many test stressors cite residue r
          * orphans = residues in stressors.csv cited by nothing.
          * X = rows where naive_technical_change is blank (naive survivals)
@@ -79,6 +80,9 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
         }
         if test_stressor.technical_change.is_none() {
             residue_survival_count += 1;
+            if test_stressor.covered_by.len() > 1 {
+                multi_residue_survival_count += 1;
+            }
         }
         for s in test_stressor.covered_by.iter() {
             *residue_cite_count.entry(s.as_str()).or_insert(0) += 1;
@@ -89,10 +93,11 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
         return Err("Update stressors.csv or fix covered_by values in your test".into());
     }
 
-    let combination_rate = residue_cite_count
-        .iter()
-        .fold(0, |acc, s| if *s.1 > 1 { acc + 1 } else { acc }) as f32
-        / residue_survival_count as f32;
+    let combination_rate = if residue_survival_count == 0 {
+        0.0
+    } else {
+        multi_residue_survival_count as f32 / residue_survival_count as f32
+    };
 
     let residual_index =
         (residue_survival_count - naive_survival_count) as f32 / test_stressors.len() as f32;
