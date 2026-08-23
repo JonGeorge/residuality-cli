@@ -1,7 +1,7 @@
 use crate::analysis::matrix::generate_incidence_matrix;
 use crate::cli::MatrixAction;
 use crate::storage::{
-    COMPONENTS_PATH, STRESSORS_PATH, get_matrix_path_with_date, get_rows, write_matrix_to_csv,
+    COMPONENTS_PATH, STRESSORS_PATH, get_matrix_path_with_datetime, get_rows, write_matrix_to_csv,
 };
 use crate::views::matrix::print_matrix;
 
@@ -16,7 +16,7 @@ pub fn run(action: MatrixAction) -> Result<(), Box<dyn std::error::Error>> {
             let matrix = generate_incidence_matrix(stressors, components);
 
             // Write vectors to csv
-            let matrix_path = get_matrix_path_with_date();
+            let matrix_path = get_matrix_path_with_datetime();
             write_matrix_to_csv(&matrix_path, &matrix)?;
 
             println!("Export saved to ./{}", matrix_path);
