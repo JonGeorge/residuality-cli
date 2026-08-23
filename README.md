@@ -18,8 +18,10 @@ Your architecture lives in CSV files (one double-click away from Excel/Sheets):
 architecture/
   components.csv   # id,name — the parts of your system
   stressors.csv    # id,name,detection,attractor,business_reaction,technical_change,affected_components
-reports/
-  matrix_<date>.csv  # derived incidence matrix — generated, never hand-edited
+  test.csv         # held-out stressors for the empirical test (stressor columns + naive_technical_change, covered_by)
+  reports/
+    <datetime>_matrix.csv    # derived incidence matrix — generated, never hand-edited
+    <datetime>_analysis.md   # saved analysis report — generated, never hand-edited
 ```
 
 Each stressor records how you'd *detect* it, the *attractor* it pulls the system toward, the
@@ -29,8 +31,9 @@ Stressors have **no probability or cost fields** (you stress the architecture fi
 
 ## Usage
  
-Four steps, in the order you'd actually work:
-**add components → add stressors → view the matrix → analyze it.**
+Five steps, in the order you'd actually work:
+**add components → add stressors → view the matrix → analyze it → test the design against fresh
+stressors.**
 
 ### 0. Set up the CSV files
 
@@ -38,8 +41,8 @@ Four steps, in the order you'd actually work:
 residuality init
 ```
 
-Creates `architecture/components.csv` and `architecture/stressors.csv` with their header rows.
-Safe to re-run — existing files are left untouched.
+Creates `architecture/components.csv`, `architecture/stressors.csv`, and `architecture/test.csv`
+with their header rows. Safe to re-run — existing files are left untouched.
 
 ### 1. List the parts of your architecture
  
@@ -85,7 +88,9 @@ residuality analyze
 ```
 
 Reads the same CSV files, derives the incidence matrix, and prints a summary of what the numbers
-are telling you. For the small matrix above:
+are telling you. It also saves a fuller markdown rendering of the same analysis to
+`architecture/reports/<datetime>_analysis.md`, so every run is preserved next to the matrix
+exports. For the small matrix above:
 
 ```
 2 stressors × 3 components - 4 links, density = 0.667
@@ -139,6 +144,54 @@ The `analyze` command surfaces most of these automatically, but the judgment cal
 **Compound stressors** - Pick a stressor's row and look at which components have 1s — those are your damaged/degraded components while the system sits in that attractor. Now, while imagining the system in that weakened state, ask: "and what if a second stressor hits before we've recovered?" That's a vulnerability that exists in no single row since it only appears in the sequence. This shows combinations of vulnerabilities that only appear when a second stressor hits an already damaged system. As you stack combinations, you'll notice some components keep showing up in the damaged set. Consider hardening the components that appear in multiple damage sets. Add residues specifically for the multi-stressor sequences that leave the system unable to recover. Be aware of traps, for example, your detection mechanism for stressor B was destroyed by stressor A. When you find one of these, you treat the sequence itself as a new row in your matrix. It becomes a residue like any other.
 
 **Columns that sum to zero** - shows components that appear invulnerable but are almost certainly just under-stressed; consider generating more stressors aimed at that part of the system before trusting the matrix
+
+### 6. Test the design empirically
+
+The last step of the method is an evidence check: bombard the finished design with stressors it has
+**never seen**. Brainstorm a fresh batch — don't reuse the ones that shaped the design — and record
+them in a held-out file. `residuality init` creates `architecture/test.csv` with the right headers,
+but the command accepts any file with the same columns:
+
+```sh
+residuality test architecture/test.csv
+```
+
+The test file has the same columns as `stressors.csv` plus two:
+
+- **naive_technical_change** — the change your *naive* first-draft architecture would have needed
+  to survive this stressor. Leave it blank if the naive design would have survived as-is.
+  (`technical_change` answers the same question for the *residual*, post-analysis architecture.)
+- **covered_by** — which existing residues protect against this stressor, as semicolon-separated
+  stressor ids from `stressors.csv` (e.g. `S3;S12`). Every id must exist — unknown references are
+  reported and stop the run (matching is case-sensitive).
+
+Rows where `technical_change` is blank but `covered_by` is empty are flagged: the architecture
+survived, but nothing explains *why*. Then the report:
+
+```
+Residual index = 0.700
+Criticality score = 0.850
+Rate of multiple residues covering a single test = 0.400
+
+Highest leverage
+5     S3
+2     S1
+
+Residues with no impact
+S9
+```
+
+- **Residual index** — (residual survivals − naive survivals) ÷ total test stressors. Positive
+  means the residues made the architecture survive stress it was never designed for — the
+  evidence-based payoff of the whole method.
+- **Criticality score** — the share of test stressors the residual architecture survives.
+- **Combination rate** — the share of surviving tests that needed two or more residues working
+  together: a measure of how much survival depends on residues combining rather than any single
+  residue being enough.
+- **Highest leverage** — the residues cited most often across the tests; these are carrying the
+  design.
+- **Residues with no impact** — residues in `stressors.csv` that no test stressor cited; either
+  the tests don't probe them yet, or they're dead weight.
 
 ## What is Residuality Theory?
 
