@@ -73,6 +73,37 @@ where
     serializer.serialize_str(vect.join(";").as_str())
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct TestStressor {
+    pub id: Option<String>,
+
+    pub name: Option<String>,
+
+    pub detection: Option<String>,
+
+    pub attractor: Option<String>,
+
+    pub business_reaction: Option<String>,
+
+    pub technical_change: Option<String>,
+
+    // This ONE field is parsed by our function instead of serde's default Vec logic.
+    // The CSV cell holds ids joined by ';'  (e.g. "auth_service;database").
+    #[serde(
+        serialize_with = "serialize_affects",
+        deserialize_with = "deserialize_affects"
+    )]
+    pub affected_components: BTreeSet<String>,
+
+    pub naive_technical_change: Option<String>,
+
+    #[serde(
+        serialize_with = "serialize_affects",
+        deserialize_with = "deserialize_affects"
+    )]
+    pub covered_by: BTreeSet<String>,
+}
+
 pub struct Matrix {
     pub table: Vec<Vec<u32>>,
     pub stressors: Vec<Stressor>,

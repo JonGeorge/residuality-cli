@@ -10,6 +10,7 @@ use crate::model::Matrix;
 
 pub const COMPONENTS_PATH: &str = "architecture/components.csv";
 pub const STRESSORS_PATH: &str = "architecture/stressors.csv";
+pub const TEST_PATH: &str = "architecture/test.csv";
 
 pub fn get_matrix_path_with_date() -> String {
     let date = chrono::Local::now().format("%Y%m%d");

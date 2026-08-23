@@ -4,3 +4,4 @@ pub mod component;
 pub mod init;
 pub mod matrix;
 pub mod stressor;
+pub mod test;

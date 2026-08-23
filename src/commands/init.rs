@@ -1,7 +1,8 @@
 use crate::{
-    model::{Component, Stressor},
+    model::{Component, Stressor, TestStressor},
     storage::{
-        COMPONENTS_PATH, STRESSORS_PATH, get_header_row_from_struct, write_rows_to_path_from_vec,
+        COMPONENTS_PATH, STRESSORS_PATH, TEST_PATH, get_header_row_from_struct,
+        write_rows_to_path_from_vec,
     },
 };
 use std::{collections::BTreeSet, path::Path};
@@ -56,6 +57,33 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                 "Created stressor file '{}'",
                 stressor_path.to_string_lossy()
             );
+            something_changed = true;
+        }
+    }
+
+    let test_path: &Path = Path::new(TEST_PATH);
+    if let Some(dir) = test_path.parent() {
+        if !Path::exists(dir) {
+            std::fs::create_dir_all(dir)?;
+            println!("Created path '{}'", dir.to_string_lossy());
+            something_changed = true;
+        }
+
+        if !Path::exists(test_path) {
+            let header = get_header_row_from_struct(&TestStressor {
+                id: None,
+                name: None,
+                detection: None,
+                attractor: None,
+                business_reaction: None,
+                technical_change: None,
+                affected_components: BTreeSet::new(),
+                naive_technical_change: None,
+                covered_by: BTreeSet::new(),
+            })?;
+
+            write_rows_to_path_from_vec(TEST_PATH, vec![header])?;
+            println!("Created test file '{}'", test_path.to_string_lossy());
             something_changed = true;
         }
     }

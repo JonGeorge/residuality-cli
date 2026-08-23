@@ -43,8 +43,8 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
 
-        _ => {
-            eprintln!("not implemented yet");
+        Commands::Test { file } => {
+            commands::test::run(file)?;
             Ok(())
         }
     }
