@@ -1,8 +1,13 @@
 [package]
 name = "residuality"
 version = "1.0.0"
+description = "A CLI for practicing Residuality Theory"
 edition = "2024"
 default-run = "residuality"
+license = "Unlicense"
+repository = "https://github.com/JonGeorge/residuality-cli"
+keywords = ["architecture", "residuality", "cli"]
+categories = ["command-line-utilities"]
 
 [[bin]]
 name = "res"
