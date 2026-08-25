@@ -142,3 +142,93 @@ pub enum IdToCheckIsFrom {
     /// One of the list's own rows, it'll match itself once
     ExistingList,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        commands::{
+            check::{IdToCheckIsFrom, check_component},
+        },
+        model::{Component, Stressor},
+    };
+
+    fn component(id: &str) -> Component {
+        Component {
+            id: id.to_string(),
+            name: None,
+        }
+    }
+
+    fn stressor(id: &str, affects: &[&str]) -> Stressor {
+        Stressor {
+            id: Some(id.to_string()),
+            name: Some(String::new()),
+            detection: Some(String::new()),
+            attractor: Some(String::new()),
+            business_reaction: Some(String::new()),
+            technical_change: Some(String::new()),
+            affected_components: affects.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    mod component_validation {
+        use super::*;
+
+        #[test]
+        fn id_is_empty() {
+            let components = [component("")];
+            assert_eq!(
+                check_component(&components[0], &components, IdToCheckIsFrom::ExistingList),
+                Some("needs id".to_string())
+            );
+        }
+
+        #[test]
+        fn id_has_invalid_chars() {
+            let components = [component("i-d")];
+            assert_eq!(
+                check_component(&components[0], &components, IdToCheckIsFrom::ExistingList),
+                Some("only numbers and letters allowed in id".to_string())
+            );
+        }
+
+        #[test]
+        fn created_from_cli_is_dup() {
+            let components = [component("c1")];
+            assert_eq!(
+                check_component(&component("c1"), &components, IdToCheckIsFrom::CommandLine),
+                Some("id 'c1' must be unique".to_string())
+            );
+        }
+
+        #[test]
+        fn ad_hoc_check_is_dup() {
+            let components = [component("c1"), component("c1")];
+            assert_eq!(
+                check_component(&components[0], &components, IdToCheckIsFrom::ExistingList),
+                Some("id 'c1' must be unique".to_string())
+            );
+        }
+    }
+
+    mod stressor_validation {
+        use crate::{commands::check::check_stressors, storage::STRESSORS_PATH};
+
+        use super::*;
+
+        #[test]
+        fn affects_nonexisting_component() {
+            let components = [component("c1")];
+            let stressors = [stressor("s1", &["c43"])];
+            let findings = check_stressors(&stressors, &components).unwrap();
+
+            assert_eq!(
+                findings,
+                [format!(
+                    "{} row 2 - affected component 'c43' references non-existent component",
+                    STRESSORS_PATH,
+                )]
+            );
+        }
+    }
+}
