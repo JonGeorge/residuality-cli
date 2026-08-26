@@ -230,5 +230,20 @@ mod tests {
                 )]
             );
         }
+
+        #[test]
+        pub fn affected_component_id_has_invalid_chars() {
+            let components = [component("c1")];
+            let stressors = [stressor("s1", &["c1!!!"])];
+            let findings = check_stressors(&stressors, &components).unwrap();
+
+            assert_eq!(
+                findings,
+                [format!(
+                    "{} row 2 - only numbers and letters allowed in id for affected component 'c1!!!'",
+                    STRESSORS_PATH,
+                )]
+            );
+        }
     }
 }
