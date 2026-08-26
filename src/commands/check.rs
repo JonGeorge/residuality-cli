@@ -232,7 +232,7 @@ mod tests {
         }
 
         #[test]
-        pub fn affected_component_id_has_invalid_chars() {
+        fn affected_component_id_has_invalid_chars() {
             let components = [component("c1")];
             let stressors = [stressor("s1", &["c1!!!"])];
             let findings = check_stressors(&stressors, &components).unwrap();
