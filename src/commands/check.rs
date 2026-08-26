@@ -146,9 +146,7 @@ pub enum IdToCheckIsFrom {
 #[cfg(test)]
 mod tests {
     use crate::{
-        commands::{
-            check::{IdToCheckIsFrom, check_component},
-        },
+        commands::check::{IdToCheckIsFrom, check_component},
         model::{Component, Stressor},
     };
 
