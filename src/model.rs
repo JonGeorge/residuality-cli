@@ -112,10 +112,33 @@ pub struct Matrix {
 
 #[cfg(test)]
 mod tests {
-    use csv::ReaderBuilder;
-    use std::collections::BTreeSet;
+    use csv::{ReaderBuilder, WriterBuilder};
 
     use crate::model::Stressor;
+    use std::collections::BTreeSet;
+
+    const HEADER: &str =
+        "id,name,detection,attractor,business_reaction,technical_change,affected_components\n";
+
+    fn stressor(id: &str, affects: &[&str]) -> Stressor {
+        Stressor {
+            id: Some(id.to_string()),
+            name: None,
+            detection: None,
+            attractor: None,
+            business_reaction: None,
+            technical_change: None,
+            affected_components: affects.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    fn write_stressor_to_csv(stressor: &Stressor) -> Result<String, Box<dyn std::error::Error>> {
+        let mut writer = WriterBuilder::new().has_headers(true).from_writer(vec![]);
+        writer.serialize(stressor)?;
+
+        let data = String::from_utf8(writer.into_inner()?)?;
+        Ok(data)
+    }
 
     fn parse_stressor(csv_row: &str) -> Stressor {
         let result = parse_result(csv_row);
@@ -124,9 +147,7 @@ mod tests {
     }
 
     fn parse_result(csv_row: &str) -> Result<Vec<Stressor>, csv::Error> {
-        let csv_row_with_header = format!(
-            "id,name,detection,attractor,business_reaction,technical_change,affected_components\n{csv_row}"
-        );
+        let csv_row_with_header = format!("{HEADER}{csv_row}");
 
         parse_result_custom_header(&csv_row_with_header)
     }
@@ -303,5 +324,84 @@ mod tests {
                 BTreeSet::from(["c,2".to_string(), "ea".to_string()])
             );
         }
+    }
+
+    mod serializer {
+
+        use super::*;
+
+        #[test]
+        fn basic_stressor_is_serialized() {
+            let stressor = Stressor {
+                id: Some("S1".to_string()),
+                name: Some("TEST".to_string()),
+                detection: Some("eee".to_string()),
+                attractor: Some("eee".to_string()),
+                business_reaction: Some("eee".to_string()),
+                technical_change: Some("eee".to_string()),
+                affected_components: BTreeSet::from(["test_comp".to_string()]),
+            };
+
+            let csv = write_stressor_to_csv(&stressor).unwrap();
+
+            assert_eq!(csv, format!("{HEADER}S1,TEST,eee,eee,eee,eee,test_comp\n"));
+        }
+
+        #[test]
+        fn stressor_with_no_values_is_serialized() {
+            let stressor = stressor("", &[]);
+
+            let csv = write_stressor_to_csv(&stressor).unwrap();
+
+            assert_eq!(csv, format!("{HEADER},,,,,,\n"));
+        }
+
+        #[test]
+        fn multiple_affected_components_are_serialized() {
+            let stressor = stressor("S1", &["c1", "c2", "c3"]);
+
+            let csv = write_stressor_to_csv(&stressor).unwrap();
+
+            assert_eq!(csv, format!("{HEADER}S1,,,,,,c1;c2;c3\n"));
+        }
+
+        #[test]
+        fn affects_are_sorted() {
+            let stressor = stressor("S1", &["z", "a", "b"]);
+
+            let csv = write_stressor_to_csv(&stressor).unwrap();
+
+            assert_eq!(csv, format!("{HEADER}S1,,,,,,a;b;z\n"));
+        }
+
+        #[test]
+        fn comma_in_affects_is_quoted() {
+            let stressor = stressor("S1", &["c,1", "c12", "c13"]);
+
+            let csv = write_stressor_to_csv(&stressor).unwrap();
+
+            assert_eq!(csv, format!("{HEADER}S1,,,,,,\"c,1;c12;c13\"\n"));
+        }
+    }
+
+    #[test]
+    fn stressor_can_be_written_and_read() {
+        let stressor_initial = Stressor {
+            id: Some("S1".to_string()),
+            name: Some("Stressor1".to_string()),
+            detection: Some("Something is broken".to_string()),
+            attractor: Some("No one can log in".to_string()),
+            business_reaction: Some("Add more help desk staff".to_string()),
+            technical_change: None,
+            affected_components: ["c1", "c2", "c3"].iter().map(|s| s.to_string()).collect(),
+        };
+
+        // Serialize stressor
+        let csv = write_stressor_to_csv(&stressor_initial).unwrap();
+
+        // Deserialize stressor
+        let stressor_returned = parse_result_custom_header(csv.as_str()).unwrap();
+
+        assert_eq!(stressor_initial, stressor_returned[0]);
     }
 }
