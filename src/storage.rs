@@ -183,7 +183,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn builds_matrix() {
+    fn builds_matrix() -> Result<(), Box<dyn std::error::Error>> {
         let matrix = Matrix {
             table: vec![vec![1, 0, 1]],
             components: vec![
@@ -222,13 +222,13 @@ mod tests {
             Ok(()) => {
                 let generated_csv = std::fs::read_to_string(
                     std::env::temp_dir().join("2h995uhu24h5iu54h2iuh92ufpi4test.csv"),
-                )
-                .unwrap_or("".to_string());
+                )?;
 
                 assert_eq!(generated_csv, ",Network,Server,Storage\nApocolypse,1,0,1\n");
+                Ok(())
             }
             Err(e) => {
-                assert!(false, "Couldn't write file. {e}");
+                panic!("Couldn't write file. {e}");
             }
         }
     }
