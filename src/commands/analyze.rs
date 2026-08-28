@@ -55,11 +55,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         println!("None");
     } else {
         for (s, count) in highest_row_totals.iter() {
-            println!(
-                "{:<6}{}",
-                count,
-                s.name.as_deref().unwrap_or("<Missing stressor name>")
-            );
+            println!("{:<6}{}", count, s);
         }
     }
     println!();
@@ -197,12 +193,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     writeln!(markdown_report, "|Stressor|Components hit|")?;
     writeln!(markdown_report, "|---|---|")?;
     for (s, count) in highest_row_totals {
-        writeln!(
-            markdown_report,
-            "|{}|{}|",
-            s.name.as_deref().unwrap_or("<Missing stressor name>"),
-            count
-        )?;
+        writeln!(markdown_report, "|{}|{}|", s, count)?;
     }
     writeln!(markdown_report)?;
 

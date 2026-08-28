@@ -39,10 +39,9 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
                 prompt_for_stressors()?;
                 Ok(())
             } else {
-                let new_id = if id.is_none() {
-                    Some(get_next_stressor_id()?)
-                } else {
-                    id
+                let new_id = match id {
+                    Some(id) => id,
+                    None => get_next_stressor_id()?,
                 };
 
                 let new_stressor = Stressor {
@@ -69,13 +68,7 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
             };
 
             for stressor in stressors {
-                if let Some(n) = stressor.name {
-                    println!("{}", n);
-                } else if let Some(id) = stressor.id {
-                    println!("{}", id);
-                } else {
-                    println!("< Err: No Name or ID >");
-                }
+                println!("{}", stressor);
             }
             Ok(())
         }
@@ -161,7 +154,7 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
 
         let next_id = get_next_stressor_id()?;
         let new_stressor = Stressor {
-            id: Some(next_id.clone()),
+            id: next_id.clone(),
             name: Some(name),
             detection,
             technical_change,
@@ -186,7 +179,7 @@ fn get_next_stressor_id() -> Result<String, Box<dyn std::error::Error>> {
 
     let max_id = stressors
         .iter()
-        .filter_map(|s| s.id.as_deref()?.strip_prefix("S")?.parse::<u32>().ok())
+        .filter_map(|s| s.id.strip_prefix("S")?.parse::<u32>().ok())
         .max()
         .unwrap_or(0);
 

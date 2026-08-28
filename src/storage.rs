@@ -124,12 +124,7 @@ pub fn write_matrix_to_csv(path: &str, matrix: &Matrix) -> std::io::Result<()> {
     )?;
 
     for (i, stressor) in matrix.stressors.iter().enumerate() {
-        writer.write_field(
-            stressor
-                .name
-                .as_deref()
-                .unwrap_or(stressor.id.as_deref().unwrap()),
-        )?;
+        writer.write_field(stressor.to_string())?;
         writer.write_record(
             matrix.table[i]
                 .iter()
@@ -206,7 +201,7 @@ mod tests {
                 },
             ],
             stressors: vec![Stressor {
-                id: Some("apocolypse".to_string()),
+                id: "apocolypse".to_string(),
                 name: Some("Apocolypse".to_string()),
                 detection: None,
                 attractor: None,

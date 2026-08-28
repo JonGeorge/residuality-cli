@@ -159,7 +159,7 @@ mod tests {
 
     fn stressor(id: &str, affects: &[&str]) -> Stressor {
         Stressor {
-            id: Some(id.to_string()),
+            id: id.to_string(),
             name: Some(String::new()),
             detection: Some(String::new()),
             attractor: Some(String::new()),
