@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, path::Path};
 
 use inquire::{
     InquireError, MultiSelect, Text,
@@ -7,6 +7,7 @@ use inquire::{
 
 use crate::{
     cli::StressorAction,
+    commands::check::check_stressor,
     model::{Component, Stressor},
     storage::{COMPONENTS_PATH, STRESSORS_PATH, append_csv, get_rows, is_missing_file_err},
 };
@@ -53,7 +54,31 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
                     technical_change,
                     affected_components: BTreeSet::from_iter(affected_components),
                 };
-                Ok(append_csv(STRESSORS_PATH, &new_stressor)?)
+
+                let stressors: Vec<Stressor> = if Path::new(STRESSORS_PATH).exists() {
+                    get_rows(STRESSORS_PATH)?
+                } else {
+                    Vec::new()
+                };
+
+                let components: Vec<Component> = if Path::new(COMPONENTS_PATH).exists() {
+                    get_rows(COMPONENTS_PATH)?
+                } else {
+                    Vec::new()
+                };
+
+                match check_stressor(
+                    &new_stressor,
+                    &stressors,
+                    &components,
+                    super::check::IdToCheckIsFrom::CommandLine,
+                ) {
+                    Some(issue) => {
+                        eprintln!("{}", issue);
+                        Err("could not add stressor".into())
+                    }
+                    None => Ok(append_csv(STRESSORS_PATH, &new_stressor)?),
+                }
             }
         }
 
