@@ -18,17 +18,14 @@ pub struct Component {
 
 impl fmt::Display for Component {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.name {
-            Some(n) => write!(f, "{}", n),
-            None => write!(f, "{}", self.id),
-        }
+        f.pad(self.name.as_deref().unwrap_or(&self.id))
     }
 }
 
 // A Stressor is an environmental pressure on the architecture.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Stressor {
-    pub id: Option<String>,
+    pub id: String,
 
     pub name: Option<String>,
 
@@ -47,6 +44,12 @@ pub struct Stressor {
         deserialize_with = "deserialize_affects"
     )]
     pub affected_components: BTreeSet<String>,
+}
+
+impl fmt::Display for Stressor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.pad(self.name.as_deref().unwrap_or(&self.id))
+    }
 }
 
 fn deserialize_affects<'de, D>(deserializer: D) -> Result<BTreeSet<String>, D::Error>
@@ -75,7 +78,7 @@ where
 
 #[derive(Serialize, Deserialize)]
 pub struct TestStressor {
-    pub id: Option<String>,
+    pub id: String,
 
     pub name: Option<String>,
 
@@ -104,6 +107,12 @@ pub struct TestStressor {
     pub covered_by: BTreeSet<String>,
 }
 
+impl fmt::Display for TestStressor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.pad(self.name.as_deref().unwrap_or(&self.id))
+    }
+}
+
 pub struct Matrix {
     pub table: Vec<Vec<u32>>,
     pub stressors: Vec<Stressor>,
@@ -122,7 +131,7 @@ mod tests {
 
     fn stressor(id: &str, affects: &[&str]) -> Stressor {
         Stressor {
-            id: Some(id.to_string()),
+            id: id.to_string(),
             name: None,
             detection: None,
             attractor: None,
@@ -168,7 +177,7 @@ mod tests {
             let stressor = parse_stressor(csv);
 
             let expected = Stressor {
-                id: Some("S1".to_string()),
+                id: "S1".to_string(),
                 name: Some("TEST".to_string()),
                 detection: Some("eee".to_string()),
                 attractor: Some("eee".to_string()),
@@ -192,7 +201,7 @@ mod tests {
             let stressors = result.unwrap();
 
             let expected = Stressor {
-                id: Some("S1".to_string()),
+                id: "S1".to_string(),
                 name: Some("TEST".to_string()),
                 detection: None,
                 attractor: None,
@@ -333,7 +342,7 @@ mod tests {
         #[test]
         fn basic_stressor_is_serialized() {
             let stressor = Stressor {
-                id: Some("S1".to_string()),
+                id: "S1".to_string(),
                 name: Some("TEST".to_string()),
                 detection: Some("eee".to_string()),
                 attractor: Some("eee".to_string()),
@@ -385,9 +394,19 @@ mod tests {
     }
 
     #[test]
+    fn display_honours_width_and_alignment() {
+        let named = Stressor {
+            name: Some("Net".to_string()),
+            ..stressor("S1", &[])
+        };
+        assert_eq!(format!("[{:<6}]", named), "[Net   ]");
+        assert_eq!(format!("[{:>6}]", stressor("S1", &[])), "[    S1]");
+    }
+
+    #[test]
     fn stressor_can_be_written_and_read() {
         let stressor_initial = Stressor {
-            id: Some("S1".to_string()),
+            id: "S1".to_string(),
             name: Some("Stressor1".to_string()),
             detection: Some("Something is broken".to_string()),
             attractor: Some("No one can log in".to_string()),

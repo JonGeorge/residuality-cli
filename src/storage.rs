@@ -124,12 +124,7 @@ pub fn write_matrix_to_csv(path: &str, matrix: &Matrix) -> std::io::Result<()> {
     )?;
 
     for (i, stressor) in matrix.stressors.iter().enumerate() {
-        writer.write_field(
-            stressor
-                .name
-                .as_deref()
-                .unwrap_or(stressor.id.as_deref().unwrap()),
-        )?;
+        writer.write_field(stressor.to_string())?;
         writer.write_record(
             matrix.table[i]
                 .iter()
@@ -188,7 +183,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn builds_matrix() {
+    fn builds_matrix() -> Result<(), Box<dyn std::error::Error>> {
         let matrix = Matrix {
             table: vec![vec![1, 0, 1]],
             components: vec![
@@ -206,7 +201,7 @@ mod tests {
                 },
             ],
             stressors: vec![Stressor {
-                id: Some("apocolypse".to_string()),
+                id: "apocolypse".to_string(),
                 name: Some("Apocolypse".to_string()),
                 detection: None,
                 attractor: None,
@@ -227,13 +222,13 @@ mod tests {
             Ok(()) => {
                 let generated_csv = std::fs::read_to_string(
                     std::env::temp_dir().join("2h995uhu24h5iu54h2iuh92ufpi4test.csv"),
-                )
-                .unwrap_or("".to_string());
+                )?;
 
                 assert_eq!(generated_csv, ",Network,Server,Storage\nApocolypse,1,0,1\n");
+                Ok(())
             }
             Err(e) => {
-                assert!(false, "Couldn't write file. {e}");
+                panic!("Couldn't write file. {e}");
             }
         }
     }

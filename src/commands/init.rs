@@ -43,7 +43,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         if !Path::exists(stressor_path) {
             let header = get_header_row_from_struct(&Stressor {
-                id: None,
+                id: String::new(),
                 name: None,
                 detection: None,
                 attractor: None,
@@ -71,7 +71,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         if !Path::exists(test_path) {
             let header = get_header_row_from_struct(&TestStressor {
-                id: None,
+                id: String::new(),
                 name: None,
                 detection: None,
                 attractor: None,

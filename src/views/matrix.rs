@@ -23,28 +23,15 @@ pub fn print_matrix(matrix: &Matrix) {
     let row_sums = sum_rows(matrix);
 
     // --- one row per stressor: ● = affected, · = not; row sum on the right ---
-    for (row, s) in matrix.table.iter().zip(&matrix.stressors) {
-        print!(
-            "{:<1$}",
-            s.name.as_deref().unwrap_or(s.id.as_deref().unwrap()),
-            label_w
-        );
+    for (i, (row, s)) in matrix.table.iter().zip(&matrix.stressors).enumerate() {
+        print!("{:<1$}", s, label_w);
+
         for (cell, c) in row.iter().zip(&matrix.components) {
             let glyph = if *cell == 1 { "●" } else { "·" };
             print!("  {:^1$}", glyph, c.id.len());
         }
-        let row_sum: u32 = row_sums[matrix
-            .stressors
-            .iter()
-            .position(|stressor| {
-                s.name.as_deref().unwrap_or(s.id.as_deref().unwrap())
-                    == stressor
-                        .name
-                        .as_deref()
-                        .unwrap_or(stressor.id.as_deref().unwrap())
-            })
-            .unwrap()];
-        println!("  {:>3}", row_sum);
+
+        println!("  {:>3}", row_sums[i]);
     }
     println!("{rule}");
 
@@ -56,12 +43,10 @@ pub fn print_matrix(matrix: &Matrix) {
     println!();
 }
 
-// The left label column has to fit whatever's longest: a stressor id, or the
-// word "stressor" in the header. Returns that width in characters.
 fn label_width(stressors: &[Stressor]) -> usize {
     stressors
         .iter()
-        .map(|s| s.id.as_deref().unwrap().len())
+        .map(|s| s.to_string().chars().count())
         .max()
         .unwrap_or(0)
         .max("stressor".len())

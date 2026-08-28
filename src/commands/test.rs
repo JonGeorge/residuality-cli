@@ -39,26 +39,24 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut failed_covered_by_references = false;
 
     for (i, test_stressor) in test_stressors.iter().enumerate() {
+        let label = if test_stressor.id.trim().is_empty() {
+            format!("Row {}", i + 2)
+        } else {
+            test_stressor.id.clone()
+        };
+
         // If no technical change required for architecture to survive, then stressor must be covered by a residue
         if test_stressor.technical_change.is_none() && test_stressor.covered_by.is_empty() {
             println!(
                 "{}: Technical Change is empty but stressor is not covered by any residues",
-                test_stressor.id.as_deref().unwrap_or(
-                    test_stressor
-                        .name
-                        .as_deref()
-                        .unwrap_or(format!("Row {}", i).as_str())
-                )
+                label
             );
         }
 
         // All stressors ids referenced in covered_by must exist
 
         for residue in test_stressor.covered_by.iter() {
-            if !original_stressors
-                .iter()
-                .any(|s| s.id.as_deref().is_some_and(|id| id == residue))
-            {
+            if !original_stressors.iter().any(|s| &s.id == residue) {
                 eprintln!("{} must exist in stressors.csv to cover a test", residue);
                 failed_covered_by_references = true;
             }
@@ -109,7 +107,8 @@ pub fn run(file: String) -> Result<(), Box<dyn std::error::Error>> {
 
     let orphans: Vec<&str> = original_stressors
         .iter()
-        .filter_map(|s| s.id.as_deref())
+        .map(|s| s.id.as_str())
+        .filter(|id| !id.trim().is_empty())
         .filter(|id| !residue_cite_count.contains_key(id))
         .collect();
 

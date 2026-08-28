@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, path::Path};
 
 use inquire::{
     InquireError, MultiSelect, Text,
@@ -7,6 +7,7 @@ use inquire::{
 
 use crate::{
     cli::StressorAction,
+    commands::check::check_stressor,
     model::{Component, Stressor},
     storage::{COMPONENTS_PATH, STRESSORS_PATH, append_csv, get_rows, is_missing_file_err},
 };
@@ -39,10 +40,9 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
                 prompt_for_stressors()?;
                 Ok(())
             } else {
-                let new_id = if id.is_none() {
-                    Some(get_next_stressor_id()?)
-                } else {
-                    id
+                let new_id = match id {
+                    Some(id) => id,
+                    None => get_next_stressor_id()?,
                 };
 
                 let new_stressor = Stressor {
@@ -54,7 +54,31 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
                     technical_change,
                     affected_components: BTreeSet::from_iter(affected_components),
                 };
-                Ok(append_csv(STRESSORS_PATH, &new_stressor)?)
+
+                let stressors: Vec<Stressor> = if Path::new(STRESSORS_PATH).exists() {
+                    get_rows(STRESSORS_PATH)?
+                } else {
+                    Vec::new()
+                };
+
+                let components: Vec<Component> = if Path::new(COMPONENTS_PATH).exists() {
+                    get_rows(COMPONENTS_PATH)?
+                } else {
+                    Vec::new()
+                };
+
+                match check_stressor(
+                    &new_stressor,
+                    &stressors,
+                    &components,
+                    super::check::IdToCheckIsFrom::CommandLine,
+                ) {
+                    Some(issue) => {
+                        eprintln!("{}", issue);
+                        Err("could not add stressor".into())
+                    }
+                    None => Ok(append_csv(STRESSORS_PATH, &new_stressor)?),
+                }
             }
         }
 
@@ -69,13 +93,7 @@ pub fn run(action: StressorAction) -> Result<(), Box<dyn std::error::Error>> {
             };
 
             for stressor in stressors {
-                if let Some(n) = stressor.name {
-                    println!("{}", n);
-                } else if let Some(id) = stressor.id {
-                    println!("{}", id);
-                } else {
-                    println!("< Err: No Name or ID >");
-                }
+                println!("{}", stressor);
             }
             Ok(())
         }
@@ -161,7 +179,7 @@ fn prompt_for_stressors() -> Result<(), Box<dyn std::error::Error>> {
 
         let next_id = get_next_stressor_id()?;
         let new_stressor = Stressor {
-            id: Some(next_id.clone()),
+            id: next_id.clone(),
             name: Some(name),
             detection,
             technical_change,
@@ -186,7 +204,7 @@ fn get_next_stressor_id() -> Result<String, Box<dyn std::error::Error>> {
 
     let max_id = stressors
         .iter()
-        .filter_map(|s| s.id.as_deref()?.strip_prefix("S")?.parse::<u32>().ok())
+        .filter_map(|s| s.id.strip_prefix("S")?.parse::<u32>().ok())
         .max()
         .unwrap_or(0);
 
