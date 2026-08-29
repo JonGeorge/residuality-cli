@@ -1,3 +1,20 @@
-/target
+# Rust / Cargo build output
+/target/
+flamegraph.svg
+perf.data*
+
+# Only res.rs is a real binary entry point
 /src/bin/*
 !/src/bin/res.rs
+
+# Editors / IDEs
+/.zed/
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
